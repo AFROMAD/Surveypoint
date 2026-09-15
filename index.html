@@ -194,6 +194,10 @@
       <button class="btn-small" id="btnDeleteSelected" style="background:var(--danger); color:#fff; flex:1; display:none;">🗑️ حذف المحدد (0)</button>
       <button class="btn-small" id="btnCancelSelect" style="background:#475569; color:var(--text); flex:1; display:none;">إلغاء</button>
     </div>
+    <div class="row" style="margin-bottom:10px;">
+      <button class="btn-small" id="btnMarkAllDone" style="background:var(--accent2); color:#04220f; flex:1;">✅ تحديد الكل كمنتهية</button>
+      <button class="btn-small" id="btnDeleteAll" style="background:var(--danger); color:#fff; flex:1;">🗑️ حذف كل النقاط</button>
+    </div>
     <div id="list"></div>
     <div id="empty" style="display:none;">لا توجد معاملات مضافة بعد</div>
   </div>
@@ -453,6 +457,7 @@ function renderAll(fitView){
       (t.done ? '✅ منتهية' : '⏳ قيد التنفيذ') + '<br>' +
       '<div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">' +
         '<a class="btn-small" style="background:#4285F4; color:#fff; text-decoration:none; display:inline-flex; align-items:center;" href="https://www.google.com/maps/dir/?api=1&destination=' + t.lat + ',' + t.lng + '&travelmode=driving" target="_blank" rel="noopener">🧭 الذهاب للموقع</a>' +
+        '<button class="btn-small ' + (t.done ? 'btn-undo' : 'btn-done') + '" data-toggle-id="' + t.id + '">' + (t.done ? '↩️ تراجع' : '✔️ إنهاء') + '</button>' +
         '<button class="btn-small" style="background:#25D366; color:#fff;" data-share-id="' + t.id + '">📤 مشاركة الموقع</button>' +
       '</div>'
     );
@@ -710,6 +715,26 @@ document.getElementById('list').addEventListener('change', function(e){
   updateSelectionButtons();
 });
 
+document.getElementById('btnMarkAllDone').addEventListener('click', async function(){
+  if(transactions.length === 0) return;
+  const visible = transactions.filter(t => !hiddenDates.has(t.createdAt || 'بدون تاريخ'));
+  if(visible.length === 0) return;
+  if(!confirm('هل تريد تحديد ' + visible.length + ' معاملة (الظاهرة حالياً) كمنتهية؟')) return;
+  visible.forEach(function(t){ t.done = true; });
+  await saveTransactions();
+  renderAll(false);
+});
+
+document.getElementById('btnDeleteAll').addEventListener('click', async function(){
+  if(transactions.length === 0) return;
+  if(!confirm('⚠️ هل أنت متأكد من حذف جميع المعاملات (' + transactions.length + ')؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
+  transactions = [];
+  selectMode = false;
+  selectedIds.clear();
+  hiddenDates.clear();
+  await saveTransactions();
+  renderAll();
+});
 document.getElementById('btnSelectMode').addEventListener('click', function(){
   selectMode = true;
   selectedIds.clear();
@@ -729,6 +754,18 @@ document.getElementById('btnDeleteSelected').addEventListener('click', async fun
   selectedIds.clear();
   await saveTransactions();
   renderAll();
+});
+
+document.addEventListener('click', async function(e){
+  const toggleBtn = e.target.closest('[data-toggle-id]');
+  if(!toggleBtn) return;
+  const id = toggleBtn.getAttribute('data-toggle-id');
+  const t = transactions.find(x => x.id === id);
+  if(!t) return;
+  t.done = !t.done;
+  await saveTransactions();
+  renderAll(false);
+  if(map){ map.closePopup(); }
 });
 
 document.addEventListener('click', function(e){
