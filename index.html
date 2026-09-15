@@ -41,6 +41,13 @@
     display:flex; align-items:center; justify-content:center; padding:0;
   }
   #btnMyLocation.active{ background:var(--accent); color:#03202f; }
+  #btnNearest{
+    position:absolute; top:102px; right:10px; z-index:1001;
+    background:var(--card); color:var(--accent); border:1px solid var(--border);
+    border-radius:50%; width:38px; height:38px; font-size:16px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.4); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
   .my-location-dot{ position:relative; width:16px; height:16px; }
   .my-location-dot::after{
     content:''; position:absolute; inset:0; background:#3b82f6;
@@ -105,6 +112,17 @@
     box-shadow:none; white-space:nowrap;
   }
   .leaflet-tooltip.point-label::before{ border-top-color:rgba(15,23,42,0.85); }
+  .tabs{ display:flex; gap:6px; margin-bottom:10px; }
+  .tab-btn{
+    flex:1; padding:9px 8px; border-radius:8px; font-size:13px; font-weight:600;
+    background:#16213a; color:var(--muted); border:1px solid var(--border); cursor:pointer;
+  }
+  .tab-btn.active{ background:var(--accent); color:#03202f; border-color:var(--accent); }
+  .stage-badge{
+    display:inline-block; width:20px; height:20px; border-radius:50%; color:#fff;
+    font-size:11px; font-weight:700; text-align:center; line-height:20px; margin-left:6px;
+  }
+  #inpSearch{ margin-bottom:10px; }
   .date-chip{
     padding:6px 12px; border-radius:20px; font-size:12px; font-weight:600;
     border:1px solid var(--border); background:#16213a; color:var(--text); cursor:pointer;
@@ -125,6 +143,7 @@
   <div id="map"><div class="loading">جاري تحميل الخريطة...</div></div>
   <button id="btnToggleMap">🔽 تكبير الخريطة</button>
   <button id="btnMyLocation" title="موقعي الحالي">📍</button>
+  <button id="btnNearest" title="أقرب معاملة لي">📏</button>
 </div>
 
 <div class="panel">
@@ -147,38 +166,33 @@
         <input id="inpN" type="number" step="any" placeholder="مثال: 2780500">
       </div>
     </div>
+    <div class="row">
+      <div>
+        <label>مرحلة المعاملة</label>
+        <select id="inpStage">
+          <option value="1">1️⃣ المرحلة الأولى</option>
+          <option value="2">2️⃣ المرحلة الثانية</option>
+          <option value="3">3️⃣ المرحلة الثالثة</option>
+          <option value="4">4️⃣ المرحلة الرابعة</option>
+          <option value="5">5️⃣ المرحلة الخامسة</option>
+        </select>
+      </div>
+    </div>
     <button class="btn-primary" id="btnAdd">إضافة على الخريطة</button>
     <div id="err"></div>
   </div>
 
   <div class="card">
     <h3>📥 إضافة عدة معاملات دفعة واحدة</h3>
-    <label>ألصق الإحداثيات (كل سطر بصيغة E,N — أو الاسم,E,N)</label>
-    <textarea id="bulkInput" rows="4" style="width:100%; padding:9px 10px; border-radius:8px; border:1px solid var(--border); background:#0f172a; color:var(--text); font-size:13px; direction:ltr; text-align:left; resize:vertical;" placeholder="407500,2780500&#10;معاملة 55,408200,2781100"></textarea>
+    <label>ألصق الإحداثيات (كل سطر بصيغة: الاسم,E,N,المرحلة — أو E,N — أو الاسم,E,N)</label>
+    <textarea id="bulkInput" rows="4" style="width:100%; padding:9px 10px; border-radius:8px; border:1px solid var(--border); background:#0f172a; color:var(--text); font-size:13px; direction:ltr; text-align:left; resize:vertical;" placeholder="407500,2780500&#10;معاملة 55,408200,2781100,3"></textarea>
     <button class="btn-primary" id="btnBulkAdd" style="margin-top:10px;">إضافة الكل على الخريطة</button>
     <div id="bulkErr" style="color:var(--danger); font-size:12px; margin-top:6px; display:none;"></div>
   </div>
 
   <div class="card">
-    <h3>🔄 نقل البيانات بين الأجهزة</h3>
-    <p style="font-size:12px; color:var(--muted); margin:0 0 10px;">
-      المزامنة بين الأجهزة تعمل تلقائياً الآن. هذا القسم اختياري فقط كنسخة احتياطية يدوية إذا احتجت نقل البيانات بدون إنترنت.
-    </p>
-    <div class="row">
-      <button class="btn-small" style="background:var(--accent); color:#03202f; flex:1;" id="btnExport">📤 تصدير البيانات</button>
-      <button class="btn-small" style="background:#475569; color:var(--text); flex:1;" id="btnShowImport">📥 استيراد البيانات</button>
-    </div>
-    <textarea id="exportBox" rows="3" readonly style="display:none; width:100%; margin-top:10px; padding:9px 10px; border-radius:8px; border:1px solid var(--border); background:#0f172a; color:var(--text); font-size:11px; direction:ltr; text-align:left;"></textarea>
-    <button class="btn-small" id="btnCopyExport" style="display:none; margin-top:8px; background:var(--accent2); color:#04220f;">نسخ النص</button>
-
-    <div id="importArea" style="display:none; margin-top:10px;">
-      <textarea id="importBox" rows="3" placeholder="الصق هنا النص الذي صدّرته من الجهاز الآخر" style="width:100%; padding:9px 10px; border-radius:8px; border:1px solid var(--border); background:#0f172a; color:var(--text); font-size:11px; direction:ltr; text-align:left;"></textarea>
-      <div class="row" style="margin-top:8px;">
-        <button class="btn-small" id="btnImportMerge" style="background:var(--accent2); color:#04220f; flex:1;">دمج مع البيانات الحالية</button>
-        <button class="btn-small" id="btnImportReplace" style="background:var(--danger); color:#fff; flex:1;">استبدال الكل</button>
-      </div>
-    </div>
-    <div id="importMsg" style="font-size:12px; margin-top:8px; display:none;"></div>
+    <h3>🎨 دليل ألوان المراحل</h3>
+    <div id="stageLegend" style="display:flex; flex-wrap:wrap; gap:10px; font-size:12px;"></div>
   </div>
 
   <div class="card">
@@ -188,7 +202,12 @@
 
   <div class="card">
     <h3>📋 قائمة المعاملات</h3>
+    <input id="inpSearch" type="text" placeholder="🔍 بحث باسم أو رقم المعاملة...">
     <div class="stats" id="stats"></div>
+    <div class="tabs" id="statusTabs">
+      <button class="tab-btn" id="tabPending" data-tab="pending">⏳ قيد التنفيذ (0)</button>
+      <button class="tab-btn" id="tabDone" data-tab="done">✅ منتهية (0)</button>
+    </div>
     <div class="row" style="margin-bottom:10px;">
       <button class="btn-small" id="btnSelectMode" style="background:#475569; color:var(--text); flex:1;">🖊️ تحديد للحذف</button>
       <button class="btn-small" id="btnDeleteSelected" style="background:var(--danger); color:#fff; flex:1; display:none;">🗑️ حذف المحدد (0)</button>
@@ -209,7 +228,14 @@
       • الإحداثيات المستخدمة هي نظام UTM Zone 40N (المستخدم في إمارة الشارقة)، Datum: WGS84.<br>
       • <b>المزامنة بين الأجهزة تعمل تلقائياً وبشكل دائم</b> (عبر خدمة Firebase من Google، مستقلة تماماً عن Claude): أي جهاز يفتح هذا الملف (كمبيوتر أو جوال، حتى لو أُرسل عبر واتساب أو إيميل) سيرى نفس النقاط، وأي إضافة أو تعديل ينعكس على البقية خلال ثوانٍ، بشرط توفر إنترنت.<br>
       • البيانات تُخزَّن أيضاً نسخة احتياطية على كل جهاز، فتبقى متاحة للعرض حتى بدون إنترنت.<br>
-      • النقطة الحمراء = معاملة لم تنتهِ بعد، والخضراء = معاملة مكتملة.
+      • <b>لون النقطة على الخريطة</b> يعكس الآن مرحلتها (1 إلى 5) — راجع "دليل ألوان المراحل" أعلاه. حالة "منتهية/قيد التنفيذ" (النقطة الصغيرة بجانب الاسم في القائمة) منفصلة تماماً عن المرحلة، وتتحكم بها من زر "إنهاء" في القائمة أو النافذة المنبثقة.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3 style="color:var(--muted);">📏 أقرب معاملة</h3>
+    <p style="font-size:12px; color:var(--muted); line-height:1.8; margin:0;">
+      اضغط زر 📏 أعلى الخريطة (بجانب زر موقعي الحالي) ليعرض لك اسم أقرب معاملة إليك، والمسافة، والاتجاه.
     </p>
   </div>
 
@@ -223,7 +249,13 @@ let transactions = [];
 let hiddenDates = new Set();
 let selectMode = false;
 let selectedIds = new Set();
+let activeTab = 'pending'; // 'pending' أو 'done'
+let searchQuery = '';
 const STORAGE_KEY = 'sharjah_survey_transactions';
+
+const STAGE_COLORS = { 1:'#ef4444', 2:'#f97316', 3:'#eab308', 4:'#3b82f6', 5:'#22c55e' };
+const STAGE_LABELS = { 1:'المرحلة الأولى', 2:'المرحلة الثانية', 3:'المرحلة الثالثة', 4:'المرحلة الرابعة', 5:'المرحلة الخامسة' };
+function stageColor(stage){ return STAGE_COLORS[stage] || STAGE_COLORS[1]; }
 
 // ====== التخزين السحابي عبر Firebase (مستقل تماماً، يعمل بغض النظر عن كيفية فتح الملف) ======
 const FIREBASE_URL = 'https://points-project-d92b8-default-rtdb.firebaseio.com';
@@ -333,6 +365,39 @@ function todayStr(d){
   return y + '-' + m + '-' + day;
 }
 
+function distanceMeters(lat1, lon1, lat2, lon2){
+  const R = 6371000;
+  const toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function bearingDegrees(lat1, lon1, lat2, lon2){
+  const toRad = d => d * Math.PI / 180;
+  const toDeg = r => r * 180 / Math.PI;
+  const dLon = toRad(lon2 - lon1);
+  const y = Math.sin(dLon) * Math.cos(toRad(lat2));
+  const x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) - Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
+function bearingToArabicDir(brng){
+  const dirs = ['شمال', 'شمال شرق', 'شرق', 'جنوب شرق', 'جنوب', 'جنوب غرب', 'غرب', 'شمال غرب'];
+  return dirs[Math.round(brng / 45) % 8];
+}
+
+function geoErrorMessage(err){
+  if(err && err.code === 1){
+    return 'تم رفض إذن الوصول للموقع. فعّله من: إعدادات الجهاز ← الخصوصية/الموقع ← فعّل خدمة الموقع لهذا المتصفح، ثم أعد تحميل الصفحة وحاول مجدداً.';
+  } else if(err && err.code === 2){
+    return 'تعذر تحديد موقعك حالياً — تأكد من تفعيل خدمة الموقع (GPS) في الجهاز، وأنك في مكان مفتوح بعيد عن المباني.';
+  } else if(err && err.code === 3){
+    return 'استغرق تحديد الموقع وقتاً طويلاً — تأكد من تفعيل GPS وحاول مرة أخرى.';
+  }
+  return 'تعذر تحديد موقعك.';
+}
+
 function showError(msg){
   const el = document.getElementById('err');
   el.textContent = msg;
@@ -397,6 +462,16 @@ function renderDateFilters(){
   });
 }
 
+function renderStageLegend(){
+  const wrap = document.getElementById('stageLegend');
+  wrap.innerHTML = Object.keys(STAGE_COLORS).map(function(stage){
+    return '<span style="display:flex; align-items:center; gap:5px; color:var(--text);">' +
+      '<span style="width:14px; height:14px; border-radius:50%; background:' + STAGE_COLORS[stage] + '; display:inline-block;"></span>' +
+      STAGE_LABELS[stage] +
+      '</span>';
+  }).join('');
+}
+
 function updateSelectionButtons(){
   const delBtn = document.getElementById('btnDeleteSelected');
   const cancelBtn = document.getElementById('btnCancelSelect');
@@ -422,24 +497,29 @@ function renderAll(fitView){
   listEl.innerHTML = '';
 
   renderDateFilters();
+  renderStageLegend();
   updateSelectionButtons();
 
-  const visible = transactions.filter(t => !hiddenDates.has(t.createdAt || 'بدون تاريخ'));
+  let visible = transactions.filter(t => !hiddenDates.has(t.createdAt || 'بدون تاريخ'));
+  const q = (searchQuery || '').trim().toLowerCase();
+  if(q){ visible = visible.filter(t => (t.name || '').toLowerCase().includes(q)); }
 
   if(transactions.length === 0){
     emptyEl.style.display = 'block';
     emptyEl.textContent = 'لا توجد معاملات مضافة بعد';
   } else if(visible.length === 0){
     emptyEl.style.display = 'block';
-    emptyEl.textContent = 'لا توجد معاملات ضمن التاريخ المحدد';
+    emptyEl.textContent = q ? 'لا توجد نتائج مطابقة للبحث' : 'لا توجد معاملات ضمن التاريخ المحدد';
   } else {
     emptyEl.style.display = 'none';
   }
 
   const bounds = [];
+  let itemsShown = 0;
 
   visible.forEach(function(t){
-    const color = t.done ? '#22c55e' : '#ef4444';
+    const stage = t.stage || 1;
+    const color = stageColor(stage);
     const marker = L.circleMarker([t.lat, t.lng], {
       radius: 9, fillColor: color, color:'#0f172a', weight:2, fillOpacity:0.9
     }).addTo(markersLayer);
@@ -454,6 +534,7 @@ function renderAll(fitView){
     marker.bindPopup(
       '<b>' + escapeHtml(t.name) + '</b><br>' +
       'E: ' + t.easting + ' | N: ' + t.northing + '<br>' +
+      '<span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:' + color + '; margin-left:4px;"></span>' + (STAGE_LABELS[stage] || STAGE_LABELS[1]) + '<br>' +
       (t.done ? '✅ منتهية' : '⏳ قيد التنفيذ') + '<br>' +
       '<div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">' +
         '<a class="btn-small" style="background:#4285F4; color:#fff; text-decoration:none; display:inline-flex; align-items:center;" href="https://www.google.com/maps/dir/?api=1&destination=' + t.lat + ',' + t.lng + '&travelmode=driving" target="_blank" rel="noopener">🧭 الذهاب للموقع</a>' +
@@ -464,6 +545,10 @@ function renderAll(fitView){
 
     bounds.push([t.lat, t.lng]);
 
+    const matchesTab = (activeTab === 'done') ? t.done : !t.done;
+    if(!matchesTab) return;
+    itemsShown++;
+
     const item = document.createElement('div');
     item.className = 'item' + (t.done ? ' done' : '');
     const checkboxHtml = selectMode
@@ -472,7 +557,7 @@ function renderAll(fitView){
     item.innerHTML =
       checkboxHtml +
       '<div class="info">' +
-        '<div class="name"><span class="status-dot ' + (t.done ? 'dot-done' : 'dot-pending') + '"></span>' + escapeHtml(t.name) + '</div>' +
+        '<div class="name"><span class="stage-badge" style="background:' + stageColor(t.stage || 1) + ';">' + (t.stage || 1) + '</span><span class="status-dot ' + (t.done ? 'dot-done' : 'dot-pending') + '"></span>' + escapeHtml(t.name) + '</div>' +
         '<div class="coords">E: ' + t.easting + '&nbsp;&nbsp;N: ' + t.northing + '</div>' +
         '<div class="coords">📅 ' + (t.createdAt || 'بدون تاريخ') + '</div>' +
       '</div>' +
@@ -491,10 +576,21 @@ function renderAll(fitView){
   }
 
   const doneCount = visible.filter(t=>t.done).length;
+  const pendingCount = visible.length - doneCount;
   document.getElementById('stats').innerHTML =
     '<span>الإجمالي: <b>' + visible.length + '</b></span>' +
     '<span>منتهية: <b style="color:var(--accent2)">' + doneCount + '</b></span>' +
-    '<span>متبقية: <b style="color:var(--danger)">' + (visible.length - doneCount) + '</b></span>';
+    '<span>متبقية: <b style="color:var(--danger)">' + pendingCount + '</b></span>';
+
+  document.getElementById('tabPending').textContent = '⏳ قيد التنفيذ (' + pendingCount + ')';
+  document.getElementById('tabDone').textContent = '✅ منتهية (' + doneCount + ')';
+  document.getElementById('tabPending').classList.toggle('active', activeTab === 'pending');
+  document.getElementById('tabDone').classList.toggle('active', activeTab === 'done');
+
+  if(visible.length > 0 && itemsShown === 0){
+    emptyEl.style.display = 'block';
+    emptyEl.textContent = activeTab === 'done' ? 'لا توجد معاملات منتهية بعد' : 'لا توجد معاملات قيد التنفيذ ضمن هذا التبويب';
+  }
 }
 
 function escapeHtml(str){
@@ -503,7 +599,7 @@ function escapeHtml(str){
   return d.innerHTML;
 }
 
-function buildTransaction(name, eVal, nVal){
+function buildTransaction(name, eVal, nVal, stageVal){
   // يرجع { error } أو { transaction }
   if(!eVal && eVal !== 0 || !nVal && nVal !== 0){ return { error: 'الرجاء إدخال الإحداثي الشرقي والشمالي.' }; }
 
@@ -513,6 +609,9 @@ function buildTransaction(name, eVal, nVal){
   if(isNaN(easting) || isNaN(northing)){ return { error: 'الإحداثيات المدخلة غير صحيحة.' }; }
   if(easting < 100000 || easting > 900000){ return { error: 'قيمة الإحداثي الشرقي (Easting) تبدو غير منطقية لمنطقة الشارقة: ' + easting }; }
   if(northing < 2000000 || northing > 3500000){ return { error: 'قيمة الإحداثي الشمالي (Northing) تبدو غير منطقية لمنطقة الشارقة: ' + northing }; }
+
+  let stage = parseInt(stageVal, 10);
+  if(isNaN(stage) || stage < 1 || stage > 5){ stage = 1; }
 
   let latlng;
   try{
@@ -530,6 +629,7 @@ function buildTransaction(name, eVal, nVal){
       lat: latlng.lat,
       lng: latlng.lng,
       done: false,
+      stage: stage,
       createdAt: todayStr()
     }
   };
@@ -540,10 +640,11 @@ async function addTransaction(){
   const name = document.getElementById('inpName').value.trim();
   const eVal = document.getElementById('inpE').value.trim();
   const nVal = document.getElementById('inpN').value.trim();
+  const stageVal = document.getElementById('inpStage').value;
 
   if(!name){ showError('الرجاء إدخال اسم أو رقم المعاملة.'); return; }
 
-  const result = buildTransaction(name, eVal, nVal);
+  const result = buildTransaction(name, eVal, nVal, stageVal);
   if(result.error){ showError(result.error); return; }
 
   transactions.push(result.transaction);
@@ -574,18 +675,20 @@ async function bulkAddTransactions(){
 
   lines.forEach(function(line, idx){
     const parts = line.split(',').map(p => p.trim()).filter(p => p.length > 0);
-    let name = '', eVal = '', nVal = '';
+    let name = '', eVal = '', nVal = '', stageVal = '1';
 
     if(parts.length === 2){
       eVal = parts[0]; nVal = parts[1];
-    } else if(parts.length >= 3){
+    } else if(parts.length === 3){
       name = parts[0]; eVal = parts[1]; nVal = parts[2];
+    } else if(parts.length >= 4){
+      name = parts[0]; eVal = parts[1]; nVal = parts[2]; stageVal = parts[3];
     } else {
       errors.push('السطر ' + (idx+1) + ': صيغة غير مفهومة ("' + line + '")');
       return;
     }
 
-    const result = buildTransaction(name, eVal, nVal);
+    const result = buildTransaction(name, eVal, nVal, stageVal);
     if(result.error){
       errors.push('السطر ' + (idx+1) + ': ' + result.error);
     } else {
@@ -609,82 +712,6 @@ async function bulkAddTransactions(){
 }
 
 document.getElementById('btnBulkAdd').addEventListener('click', bulkAddTransactions);
-
-document.getElementById('btnExport').addEventListener('click', function(){
-  const box = document.getElementById('exportBox');
-  box.value = JSON.stringify(transactions);
-  box.style.display = 'block';
-  document.getElementById('btnCopyExport').style.display = 'inline-block';
-  box.select();
-});
-
-document.getElementById('btnCopyExport').addEventListener('click', function(){
-  const box = document.getElementById('exportBox');
-  box.select();
-  try{
-    document.execCommand('copy');
-    this.textContent = '✔️ تم النسخ';
-    setTimeout(() => { this.textContent = 'نسخ النص'; }, 1500);
-  }catch(e){
-    // المستخدم يقدر ينسخ يدوياً من المربع المحدد أصلاً
-  }
-});
-
-document.getElementById('btnShowImport').addEventListener('click', function(){
-  const area = document.getElementById('importArea');
-  area.style.display = area.style.display === 'none' ? 'block' : 'none';
-});
-
-function showImportMsg(msg, isError){
-  const el = document.getElementById('importMsg');
-  el.textContent = msg;
-  el.style.color = isError ? 'var(--danger)' : 'var(--accent2)';
-  el.style.display = 'block';
-}
-
-function parseImportInput(){
-  const raw = document.getElementById('importBox').value.trim();
-  if(!raw){ showImportMsg('الصق نص التصدير أولاً.', true); return null; }
-  let parsed;
-  try{
-    parsed = JSON.parse(raw);
-  }catch(e){
-    showImportMsg('النص غير صالح، تأكد أنك نسخته كاملاً من زر التصدير.', true);
-    return null;
-  }
-  if(!Array.isArray(parsed)){
-    showImportMsg('النص غير صالح.', true);
-    return null;
-  }
-  return parsed;
-}
-
-document.getElementById('btnImportMerge').addEventListener('click', async function(){
-  const incoming = parseImportInput();
-  if(!incoming) return;
-  const existingIds = new Set(transactions.map(t => t.id));
-  let added = 0;
-  incoming.forEach(function(t){
-    if(!existingIds.has(t.id)){
-      transactions.push(t);
-      added++;
-    }
-  });
-  await saveTransactions();
-  renderAll();
-  showImportMsg('تم دمج ' + added + ' معاملة جديدة.', false);
-  document.getElementById('importBox').value = '';
-});
-
-document.getElementById('btnImportReplace').addEventListener('click', async function(){
-  const incoming = parseImportInput();
-  if(!incoming) return;
-  transactions = incoming;
-  await saveTransactions();
-  renderAll();
-  showImportMsg('تم استبدال جميع البيانات بـ ' + incoming.length + ' معاملة.', false);
-  document.getElementById('importBox').value = '';
-});
 
 document.getElementById('list').addEventListener('click', async function(e){
   const btn = e.target.closest('button');
@@ -713,6 +740,16 @@ document.getElementById('list').addEventListener('change', function(e){
   const id = cb.getAttribute('data-id');
   if(cb.checked){ selectedIds.add(id); } else { selectedIds.delete(id); }
   updateSelectionButtons();
+});
+
+document.getElementById('tabPending').addEventListener('click', function(){
+  activeTab = 'pending';
+  renderAll(false);
+});
+
+document.getElementById('tabDone').addEventListener('click', function(){
+  activeTab = 'done';
+  renderAll(false);
 });
 
 document.getElementById('btnMarkAllDone').addEventListener('click', async function(){
@@ -754,6 +791,11 @@ document.getElementById('btnDeleteSelected').addEventListener('click', async fun
   selectedIds.clear();
   await saveTransactions();
   renderAll();
+});
+
+document.getElementById('inpSearch').addEventListener('input', function(){
+  searchQuery = this.value;
+  renderAll(false);
 });
 
 document.addEventListener('click', async function(e){
@@ -830,19 +872,57 @@ document.getElementById('btnMyLocation').addEventListener('click', function(){
       firstFix = false;
     }
   }, function(err){
-    let msg = 'تعذر تحديد موقعك.';
-    if(err && err.code === 1){
-      msg = 'تم رفض إذن الوصول للموقع. فعّله من: إعدادات الجهاز ← الخصوصية/الموقع ← فعّل خدمة الموقع لهذا المتصفح، ثم أعد تحميل الصفحة واضغط الزر مجدداً.';
-    } else if(err && err.code === 2){
-      msg = 'تعذر تحديد موقعك حالياً — تأكد من تفعيل خدمة الموقع (GPS) في الجهاز، وأنك في مكان مفتوح بعيد عن المباني.';
-    } else if(err && err.code === 3){
-      msg = 'استغرق تحديد الموقع وقتاً طويلاً — تأكد من تفعيل GPS وحاول مرة أخرى.';
-    }
-    showMapWarning(msg);
+    showMapWarning(geoErrorMessage(err));
     btn.classList.remove('active');
     myWatchId = null;
   }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 });
 });
+
+document.getElementById('btnNearest').addEventListener('click', function(){
+  if(transactions.length === 0){
+    showMapWarning('لا توجد معاملات مضافة بعد.');
+    return;
+  }
+  if(!navigator.geolocation){
+    showMapWarning('المتصفح لا يدعم تحديد الموقع.');
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(function(pos){
+    const lat = pos.coords.latitude, lng = pos.coords.longitude;
+    const candidates = transactions.filter(t => !hiddenDates.has(t.createdAt || 'بدون تاريخ'));
+    let nearest = null, minD = Infinity;
+    candidates.forEach(function(t){
+      const d = distanceMeters(lat, lng, t.lat, t.lng);
+      if(d < minD){ minD = d; nearest = t; }
+    });
+    if(!nearest){
+      showMapWarning('لا توجد معاملات ضمن التصفية الحالية.');
+      return;
+    }
+    const dir = bearingToArabicDir(bearingDegrees(lat, lng, nearest.lat, nearest.lng));
+    const distText = minD >= 1000 ? (minD / 1000).toFixed(2) + ' كم' : Math.round(minD) + ' م';
+    showNearestResult(nearest, distText, dir);
+  }, function(err){
+    showMapWarning(geoErrorMessage(err));
+  }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 });
+});
+
+function showNearestResult(t, distText, dir){
+  let el = document.getElementById('nearestBanner');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'nearestBanner';
+    el.style.cssText = 'background:#0c4a6e; color:#bae6fd; padding:10px 16px; font-size:13px; line-height:1.6; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;';
+    document.getElementById('mapWrap').insertAdjacentElement('afterend', el);
+  }
+  el.innerHTML =
+    '<span>📏 أقرب معاملة: <b>' + escapeHtml(t.name) + '</b> — على بعد ' + distText + ' باتجاه ' + dir + '</span>' +
+    '<button class="btn-small" style="background:var(--accent); color:#03202f;" id="btnGoNearest">🎯 اذهب إليها</button>';
+  document.getElementById('btnGoNearest').addEventListener('click', function(){
+    map.setView([t.lat, t.lng], 18);
+  });
+}
 
 initMap();
 loadTransactions();
