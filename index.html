@@ -28,8 +28,32 @@
   #map.expanded{ height:82vh; }
   .panel.hidden{ display:none; }
   #btnToggleMap{
-    position:absolute; top:10px; right:10px; z-index:1001;    border-radius:8px; padding:8px 12px; font-size:13px; font-weight:600;
+    position:absolute; top:10px; right:10px; z-index:1001;
+    background:var(--card); color:var(--text); border:1px solid var(--border);
+    border-radius:8px; padding:8px 12px; font-size:13px; font-weight:600;
     box-shadow:0 2px 6px rgba(0,0,0,0.4); cursor:pointer;
+  }
+  #btnMyLocation{
+    position:absolute; top:56px; right:10px; z-index:1001;
+    background:var(--card); color:var(--accent); border:1px solid var(--border);
+    border-radius:50%; width:38px; height:38px; font-size:16px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.4); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  #btnMyLocation.active{ background:var(--accent); color:#03202f; }
+  .my-location-dot{ position:relative; width:16px; height:16px; }
+  .my-location-dot::after{
+    content:''; position:absolute; inset:0; background:#3b82f6;
+    border:3px solid #fff; border-radius:50%; box-shadow:0 0 4px rgba(0,0,0,0.5);
+  }
+  .my-location-dot .pulse{
+    position:absolute; top:50%; left:50%; width:16px; height:16px;
+    margin:-8px 0 0 -8px; border-radius:50%; background:rgba(59,130,246,0.45);
+    animation: pulseAnim 1.8s ease-out infinite;
+  }
+  @keyframes pulseAnim{
+    0%{ transform:scale(1); opacity:0.8; }
+    100%{ transform:scale(3.4); opacity:0; }
   }
   .panel{ padding:14px 16px; }
   .card{
@@ -89,26 +113,6 @@
   .date-chip.active{ background:var(--accent); color:#03202f; border-color:var(--accent); }
   .item .select-check{ width:18px; height:18px; margin-left:8px; flex-shrink:0; }
 </style>
-
-<style>
-html, body { min-height: 100%; -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
-body { padding-bottom: env(safe-area-inset-bottom); }
-header { padding-top: calc(14px + env(safe-area-inset-top)); }
-button, input, select, textarea, a { -webkit-tap-highlight-color: transparent; }
-button, .date-chip, .item .actions a { touch-action: manipulation; }
-input, textarea, select, button { font-size: 16px; }
-#map { min-height: 300px; }
-.leaflet-container { background:#d8d8d8; }
-@media (max-width: 600px) {
-  .row { flex-direction: column; }
-  .item { align-items: flex-start; }
-  .item .actions { width: 100%; }
-  .item .actions > * { min-height: 40px; }
-  #btnToggleMap { top: 12px; right: 12px; }
-}
-</style>
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-192.png">
 </head>
 <body>
 
@@ -117,36 +121,13 @@ input, textarea, select, button { font-size: 16px; }
   <p>أدخل الإحداثيات الخاصة بمعاملتك ليتم تحديد موقعها تلقائياً على الخريطة</p>
 </header>
 
-<div id="connectionStatus" style="padding:7px 12px;font-size:11px;text-align:center;background:#334155;color:#e2e8f0;">
-  📡 جارٍ فحص الاتصال...
-</div>
-
-
 <div id="mapWrap">
   <div id="map"><div class="loading">جاري تحميل الخريطة...</div></div>
   <button id="btnToggleMap">🔽 تكبير الخريطة</button>
+  <button id="btnMyLocation" title="موقعي الحالي">📍</button>
 </div>
 
 <div class="panel">
-
-<div class="card" style="border-color:#22c55e;">
-  <h3>📲 تثبيت التطبيق على iPhone</h3>
-  <p style="font-size:12px;color:var(--muted);line-height:1.8;margin:0;">
-    افتح التطبيق من Safari ثم اضغط زر المشاركة ⬆️ واختر «إضافة إلى الشاشة الرئيسية».
-    بعد التثبيت سيظهر لك كأيقونة مستقلة ويمكن فتحه مباشرة من الشاشة الرئيسية.
-  </p>
-</div>
-
-
-<div class="card" style="border-color:#38bdf8;">
-  <h3>📱 تشغيل أفضل على iPhone</h3>
-  <p style="font-size:12px;color:var(--muted);line-height:1.8;margin:0;">
-    للحصول على أفضل نتيجة، افتح هذه الصفحة في Safari وليس داخل معاينة الملفات في WhatsApp.
-    إذا ظهرت الخريطة رمادية، تأكد من اتصال الإنترنت ثم أعد تحميل الصفحة.
-    ويمكنك اختيار «إضافة إلى الشاشة الرئيسية» من قائمة المشاركة في Safari.
-  </p>
-</div>
-
 
   <div class="card">
     <h3>➕ إضافة معاملة جديدة</h3>
@@ -268,55 +249,9 @@ async function cloudSave(data){
 }
 // ====== نهاية قسم التخزين ======
 
-// ===== تحسينات iPhone / Safari =====
-function updateConnectionStatus(){
-  const el = document.getElementById('connectionStatus');
-  if(!el) return;
-  if(navigator.onLine){
-    el.textContent = '🟢 متصل بالإنترنت — الخرائط والمزامنة السحابية متاحة';
-    el.style.background = '#14532d';
-  }else{
-    el.textContent = '🟠 بدون إنترنت — البيانات المحفوظة محلياً متاحة، وقد لا تظهر خريطة الإنترنت';
-    el.style.background = '#78350f';
-  }
-}
-window.addEventListener('online', updateConnectionStatus);
-window.addEventListener('offline', updateConnectionStatus);
-updateConnectionStatus();
-
-window.addEventListener('load', function(){
-  setTimeout(function(){
-    if(map) map.invalidateSize(true);
-  }, 300);
-  setTimeout(function(){
-    if(map) map.invalidateSize(true);
-  }, 1200);
-});
-
-document.addEventListener('visibilitychange', function(){
-  if(!document.hidden && map){
-    setTimeout(function(){ map.invalidateSize(true); }, 250);
-    setTimeout(function(){ map.invalidateSize(true); }, 1000);
-  }
-});
-
-
 function initMap(){
-  const mapEl = document.getElementById('map');
-  mapEl.innerHTML = ''; // إزالة نص التحميل قبل تهيئة الخريطة
-
-  // Safari/iPhone: تأكد أن الحاوية لها ارتفاع فعلي قبل إنشاء Leaflet.
-  if(mapEl.clientHeight < 250){
-    mapEl.style.height = '42vh';
-    if(mapEl.clientHeight < 250) mapEl.style.height = '360px';
-  }
-
-  map = L.map('map', {
-    zoomControl: true,
-    preferCanvas: true,
-    tap: true
-  }).setView([25.35, 55.4], 11);
-
+  document.getElementById('map').innerHTML = ''; // إزالة نص التحميل قبل تهيئة الخريطة
+  map = L.map('map', { zoomControl: true }).setView([25.35, 55.4], 11); // مركز تقريبي على الشارقة
 
   const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     maxZoom: 19,
@@ -410,14 +345,10 @@ async function loadTransactions(){
   renderAll();
 
   const cloudData = await cloudLoad();
-  if(Array.isArray(cloudData)){
-    // لا تستبدل البيانات المحلية إذا كانت السحابة فارغة بينما توجد بيانات محلية.
-    // إذا كانت السحابة تحتوي بيانات، نستخدمها ونحدّث النسخة المحلية.
-    if(cloudData.length > 0 || transactions.length === 0){
-      transactions = cloudData;
-      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions)); }catch(e){}
-      renderAll();
-    }
+  if(cloudData){
+    transactions = cloudData;
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions)); }catch(e){}
+    renderAll();
   }
 }
 
@@ -519,7 +450,11 @@ function renderAll(fitView){
     marker.bindPopup(
       '<b>' + escapeHtml(t.name) + '</b><br>' +
       'E: ' + t.easting + ' | N: ' + t.northing + '<br>' +
-      (t.done ? '✅ منتهية' : '⏳ قيد التنفيذ')
+      (t.done ? '✅ منتهية' : '⏳ قيد التنفيذ') + '<br>' +
+      '<div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">' +
+        '<a class="btn-small" style="background:#4285F4; color:#fff; text-decoration:none; display:inline-flex; align-items:center;" href="https://www.google.com/maps/dir/?api=1&destination=' + t.lat + ',' + t.lng + '&travelmode=driving" target="_blank" rel="noopener">🧭 الذهاب للموقع</a>' +
+        '<button class="btn-small" style="background:#25D366; color:#fff;" data-share-id="' + t.id + '">📤 مشاركة الموقع</button>' +
+      '</div>'
     );
 
     bounds.push([t.lat, t.lng]);
@@ -796,6 +731,82 @@ document.getElementById('btnDeleteSelected').addEventListener('click', async fun
   renderAll();
 });
 
+document.addEventListener('click', function(e){
+  const shareBtn = e.target.closest('[data-share-id]');
+  if(!shareBtn) return;
+  const id = shareBtn.getAttribute('data-share-id');
+  const t = transactions.find(x => x.id === id);
+  if(!t) return;
+  shareLocation(t);
+});
+
+function shareLocation(t){
+  const link = 'https://www.google.com/maps?q=' + t.lat + ',' + t.lng;
+  if(navigator.share){
+    navigator.share({ title: t.name, text: 'موقع معاملة: ' + t.name, url: link }).catch(function(){});
+  } else if(navigator.clipboard){
+    navigator.clipboard.writeText(link).then(function(){
+      alert('تم نسخ رابط الموقع، الصقه في أي تطبيق:\n' + link);
+    }).catch(function(){
+      prompt('انسخ رابط الموقع:', link);
+    });
+  } else {
+    prompt('انسخ رابط الموقع:', link);
+  }
+}
+
+let myLocationMarker = null;
+let myWatchId = null;
+
+document.getElementById('btnMyLocation').addEventListener('click', function(){
+  const btn = this;
+  if(myWatchId){
+    navigator.geolocation.clearWatch(myWatchId);
+    myWatchId = null;
+    if(myLocationMarker){ map.removeLayer(myLocationMarker); myLocationMarker = null; }
+    btn.classList.remove('active');
+    return;
+  }
+
+  if(!navigator.geolocation){
+    showMapWarning('المتصفح لا يدعم تحديد الموقع.');
+    return;
+  }
+
+  btn.classList.add('active');
+  let firstFix = true;
+
+  myWatchId = navigator.geolocation.watchPosition(function(pos){
+    const latlng = [pos.coords.latitude, pos.coords.longitude];
+    if(!myLocationMarker){
+      const icon = L.divIcon({
+        className: '',
+        html: '<div class="my-location-dot"><div class="pulse"></div></div>',
+        iconSize: [16, 16]
+      });
+      myLocationMarker = L.marker(latlng, { icon: icon, zIndexOffset: 1000 }).addTo(map);
+    } else {
+      myLocationMarker.setLatLng(latlng);
+    }
+    if(firstFix){
+      map.setView(latlng, 17);
+      firstFix = false;
+    }
+  }, function(err){
+    let msg = 'تعذر تحديد موقعك.';
+    if(err && err.code === 1){
+      msg = 'تم رفض إذن الوصول للموقع. فعّله من: إعدادات الجهاز ← الخصوصية/الموقع ← فعّل خدمة الموقع لهذا المتصفح، ثم أعد تحميل الصفحة واضغط الزر مجدداً.';
+    } else if(err && err.code === 2){
+      msg = 'تعذر تحديد موقعك حالياً — تأكد من تفعيل خدمة الموقع (GPS) في الجهاز، وأنك في مكان مفتوح بعيد عن المباني.';
+    } else if(err && err.code === 3){
+      msg = 'استغرق تحديد الموقع وقتاً طويلاً — تأكد من تفعيل GPS وحاول مرة أخرى.';
+    }
+    showMapWarning(msg);
+    btn.classList.remove('active');
+    myWatchId = null;
+  }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 });
+});
+
 initMap();
 loadTransactions();
 
@@ -830,15 +841,5 @@ document.getElementById('btnToggleMap').addEventListener('click', function(){
 });
 </script>
 
-
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js').catch(function (e) {
-      console.warn('Service Worker registration failed:', e);
-    });
-  });
-}
-</script>
 </body>
 </html>
