@@ -8,7 +8,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.2/proj4.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
     --bg:#0a0a0a; --surface:#161616; --surface-2:#212121; --border:#333333;
@@ -58,6 +60,11 @@
   #btnNearest{
     top:108px; color:var(--accent); border-radius:50%; width:40px; height:40px; font-size:17px;
     display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  #btnResetNorth{
+    top:156px; color:var(--accent); border-radius:50%; width:40px; height:40px; font-size:17px;
+    display:flex; align-items:center; justify-content:center; padding:0;
+    transition:transform 0.2s ease;
   }
   .my-location-dot{ position:relative; width:16px; height:16px; }
   .my-location-dot::after{
@@ -183,6 +190,7 @@
   <button id="btnToggleMap" class="map-fab">🔽 تكبير الخريطة</button>
   <button id="btnMyLocation" class="map-fab" title="موقعي الحالي">📍</button>
   <button id="btnNearest" class="map-fab" title="أقرب معاملة لي">📏</button>
+  <button id="btnResetNorth" class="map-fab" title="إعادة توجيه الشمال">🧭</button>
 </div>
 
 <div class="panel">
@@ -256,6 +264,9 @@
       <button class="btn-small" id="btnMarkAllDone" style="background:var(--positive); color:var(--positive-ink); flex:1;">✅ تحديد الكل كمنتهية</button>
       <button class="btn-small" id="btnDeleteAll" style="background:var(--danger); color:var(--danger-ink); flex:1;">🗑️ حذف كل النقاط</button>
     </div>
+    <div class="row" style="margin-bottom:10px;">
+      <button class="btn-small" id="btnExportExcel" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;">📊 تصدير إلى Excel</button>
+    </div>
     <div id="list"></div>
     <div id="empty" style="display:none;">لا توجد معاملات مضافة بعد</div>
   </div>
@@ -267,7 +278,11 @@
       • الإحداثيات المستخدمة هي نظام UTM Zone 40N (المستخدم في إمارة الشارقة)، Datum: WGS84.<br>
       • <b>المزامنة بين الأجهزة تعمل تلقائياً وبشكل دائم</b> (عبر خدمة Firebase من Google، مستقلة تماماً عن Claude): أي جهاز يفتح هذا الملف (كمبيوتر أو جوال، حتى لو أُرسل عبر واتساب أو إيميل) سيرى نفس النقاط، وأي إضافة أو تعديل ينعكس على البقية خلال ثوانٍ، بشرط توفر إنترنت.<br>
       • البيانات تُخزَّن أيضاً نسخة احتياطية على كل جهاز، فتبقى متاحة للعرض حتى بدون إنترنت.<br>
-      • <b>لون النقطة على الخريطة</b> يعكس الآن مرحلتها (1 إلى 5) — راجع "دليل ألوان المراحل" أعلاه. حالة "منتهية/قيد التنفيذ" (النقطة الصغيرة بجانب الاسم في القائمة) منفصلة تماماً عن المرحلة، وتتحكم بها من زر "إنهاء" في القائمة أو النافذة المنبثقة.
+      • <b>لون النقطة على الخريطة</b> يعكس الآن مرحلتها (1 إلى 5) — راجع "دليل ألوان المراحل" أعلاه. حالة "منتهية/قيد التنفيذ" (النقطة الصغيرة بجانب الاسم في القائمة) منفصلة تماماً عن المرحلة، وتتحكم بها من زر "إنهاء" في القائمة أو النافذة المنبثقة.<br>
+      • <b>تجميع نقاط المعاملة الواحدة</b>: إذا احتوى اسم عدة معاملات على نفس الرقم (مثلاً: "123 - نقطة 1" و"123 - نقطة 2")، يتم اعتبارها معاملة واحدة تلقائياً ويُرسم خط يصلها على الخريطة — متقطع رمادي إذا لم تكتمل كل نقاطها، ويتحول إلى خط أبيض متصل وأثخن بمجرد إنهاء كل نقاط تلك المعاملة.<br>
+      • عند التصغير، تظهر <b>أول نقطة فقط</b> من كل معاملة متعددة النقاط لتقليل الازدحام؛ اضغط عليها ليقوم التطبيق تلقائياً بالتكبير حتى تظهر جميع نقاط تلك المعاملة.<br>
+      • زر <b>"📊 تصدير إلى Excel"</b> أسفل القائمة يصدّر كل المعاملات (الاسم، المرحلة، التاريخ) كملف Excel جاهز للأرشفة.<br>
+      • <b>تدوير الخريطة</b>: بإمكانك تدوير الخريطة بإصبعين (لمسة دوارة) عند الحاجة، وزر 🧭 أعلى الخريطة يعيدها لاتجاه الشمال فوراً. (ميزة تعتمد على إضافة خارجية — إذا لاحظت أي خلل في عرض النقاط أو الخط بعد التدوير أخبرني فوراً لإزالتها أو إصلاحها).
     </p>
   </div>
 
@@ -283,7 +298,7 @@
 <script>
 proj4.defs("EPSG:32640", "+proj=utm +zone=40 +datum=WGS84 +units=m +no_defs");
 
-let map, markersLayer;
+let map, markersLayer, linesLayer;
 let transactions = [];
 let hiddenDates = new Set();
 let selectMode = false;
@@ -297,6 +312,22 @@ const STAGE_INK = { 1:'#f5f5f5', 2:'#0a0a0a', 3:'#0a0a0a', 4:'#f5f5f5', 5:'#f5f5
 const STAGE_LABELS = { 1:'المرحلة الأولى', 2:'المرحلة الثانية', 3:'المرحلة الثالثة', 4:'المرحلة الرابعة', 5:'المرحلة الخامسة' };
 function stageColor(stage){ return STAGE_COLORS[stage] || STAGE_COLORS[1]; }
 function stageInk(stage){ return STAGE_INK[stage] || STAGE_INK[1]; }
+
+const GROUP_COLLAPSE_ZOOM = 17; // تحت هذا المستوى تظهر أول نقطة فقط من كل معاملة متعددة النقاط
+
+function groupKeyOf(t){
+  const m = (t.name || '').match(/\d+/);
+  return m ? m[0] : ('_single_' + t.id);
+}
+
+function pointOrderOf(t){
+  const matches = (t.name || '').match(/\d+/g);
+  if(matches && matches.length > 1){
+    const n = parseInt(matches[1], 10);
+    if(!isNaN(n)) return n;
+  }
+  return Infinity; // لا يوجد رقم تسلسلي واضح — تُوضع في آخر الترتيب
+}
 
 // ====== التخزين السحابي عبر Firebase (مستقل تماماً، يعمل بغض النظر عن كيفية فتح الملف) ======
 const FIREBASE_URL = 'https://points-project-d92b8-default-rtdb.firebaseio.com';
@@ -328,7 +359,7 @@ async function cloudSave(data){
 
 function initMap(){
   document.getElementById('map').innerHTML = ''; // إزالة نص التحميل قبل تهيئة الخريطة
-  map = L.map('map', { zoomControl: true }).setView([25.35, 55.4], 11); // مركز تقريبي على الشارقة
+  map = L.map('map', { zoomControl: true, rotate: true, rotateControl: false, touchRotate: true }).setView([25.35, 55.4], 11); // مركز تقريبي على الشارقة
 
   const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     maxZoom: 19,
@@ -363,6 +394,18 @@ function initMap(){
   }, {}, { position: 'topleft', collapsed: true }).addTo(map);
 
   markersLayer = L.layerGroup().addTo(map);
+  linesLayer = L.layerGroup().addTo(map);
+
+  map.on('zoomend', function(){
+    if(transactions.length > 0){ renderAll(false); }
+  });
+
+  map.on('rotate', function(){
+    const btn = document.getElementById('btnResetNorth');
+    if(btn && typeof map.getBearing === 'function'){
+      btn.style.transform = 'rotate(' + (-map.getBearing()) + 'deg)';
+    }
+  });
 
   // اكتشاف فشل تحميل الصور تلقائياً وتنبيه المستخدم بدل شاشة رمادية صامتة
   let tileErrorCount = 0;
@@ -533,6 +576,7 @@ function updateSelectionButtons(){
 function renderAll(fitView){
   if(fitView === undefined) fitView = true;
   markersLayer.clearLayers();
+  linesLayer.clearLayers();
   const listEl = document.getElementById('list');
   const emptyEl = document.getElementById('empty');
   listEl.innerHTML = '';
@@ -557,32 +601,61 @@ function renderAll(fitView){
 
   const bounds = [];
   let itemsShown = 0;
+  const groups = {};
+  visible.forEach(function(t){
+    const gKey = groupKeyOf(t);
+    (groups[gKey] = groups[gKey] || []).push(t);
+  });
+
+  const currentZoom = map.getZoom();
+  const collapsedIds = new Set();
+  Object.keys(groups).forEach(function(key){
+    const pts = groups[key];
+    if(pts.length < 2) return;
+    const sorted = pts.slice().sort(function(a, b){ return pointOrderOf(a) - pointOrderOf(b); });
+    const repId = sorted[0].id;
+    if(currentZoom < GROUP_COLLAPSE_ZOOM){
+      pts.forEach(function(p){ if(p.id !== repId){ collapsedIds.add(p.id); } });
+    }
+  });
 
   visible.forEach(function(t){
+    const gKey = groupKeyOf(t);
     const stage = t.stage || 1;
     const color = stageColor(stage);
-    const marker = L.circleMarker([t.lat, t.lng], {
-      radius: 9, fillColor: color, color:'#ffffff', weight:2, fillOpacity:0.95
-    }).addTo(markersLayer);
+    const isCollapsed = collapsedIds.has(t.id);
 
-    marker.bindTooltip(escapeHtml(t.name), {
-      permanent: true,
-      direction: 'top',
-      offset: [0, -10],
-      className: 'point-label'
-    });
+    if(!isCollapsed){
+      const marker = L.circleMarker([t.lat, t.lng], {
+        radius: 9, fillColor: color, color:'#ffffff', weight:2, fillOpacity:0.95
+      }).addTo(markersLayer);
 
-    marker.bindPopup(
-      '<b>' + escapeHtml(t.name) + '</b><br>' +
-      'E: ' + t.easting + ' | N: ' + t.northing + '<br>' +
-      '<span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:' + color + '; margin-left:4px;"></span>' + (STAGE_LABELS[stage] || STAGE_LABELS[1]) + '<br>' +
-      (t.done ? '✅ منتهية' : '⏳ قيد التنفيذ') + '<br>' +
-      '<div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">' +
-        '<a class="btn-small" style="background:#4285F4; color:#fff; text-decoration:none; display:inline-flex; align-items:center;" href="https://www.google.com/maps/dir/?api=1&destination=' + t.lat + ',' + t.lng + '&travelmode=driving" target="_blank" rel="noopener">🧭 الذهاب للموقع</a>' +
-        '<button class="btn-small ' + (t.done ? 'btn-undo' : 'btn-done') + '" data-toggle-id="' + t.id + '">' + (t.done ? '↩️ تراجع' : '✔️ إنهاء') + '</button>' +
-        '<button class="btn-small" style="background:#25D366; color:#fff;" data-share-id="' + t.id + '">📤 مشاركة الموقع</button>' +
-      '</div>'
-    );
+      marker.bindTooltip(escapeHtml(t.name), {
+        permanent: true,
+        direction: 'top',
+        offset: [0, -10],
+        className: 'point-label'
+      });
+
+      marker.bindPopup(
+        '<b>' + escapeHtml(t.name) + '</b><br>' +
+        'E: ' + t.easting + ' | N: ' + t.northing + '<br>' +
+        '<span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:' + color + '; margin-left:4px;"></span>' + (STAGE_LABELS[stage] || STAGE_LABELS[1]) + '<br>' +
+        (t.done ? '✅ منتهية' : '⏳ قيد التنفيذ') + '<br>' +
+        '<div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">' +
+          '<a class="btn-small" style="background:#4285F4; color:#fff; text-decoration:none; display:inline-flex; align-items:center;" href="https://www.google.com/maps/dir/?api=1&destination=' + t.lat + ',' + t.lng + '&travelmode=driving" target="_blank" rel="noopener">🧭 الذهاب للموقع</a>' +
+          '<button class="btn-small ' + (t.done ? 'btn-undo' : 'btn-done') + '" data-toggle-id="' + t.id + '">' + (t.done ? '↩️ تراجع' : '✔️ إنهاء') + '</button>' +
+          '<button class="btn-small" style="background:#25D366; color:#fff;" data-share-id="' + t.id + '">📤 مشاركة الموقع</button>' +
+        '</div>'
+      );
+
+      if(groups[gKey] && groups[gKey].length > 1){
+        marker.on('click', function(){
+          const groupBounds = groups[gKey].map(function(p){ return [p.lat, p.lng]; });
+          map.fitBounds(groupBounds, { padding: [50, 50], maxZoom: 19 });
+        });
+      }
+    }
 
     bounds.push([t.lat, t.lng]);
 
@@ -613,6 +686,19 @@ function renderAll(fitView){
         '<button class="btn-small btn-del" data-action="delete" data-id="' + t.id + '">🗑️</button>' +
       '</div>');
     listEl.appendChild(item);
+  });
+
+  Object.keys(groups).forEach(function(key){
+    const pts = groups[key].slice().sort(function(a, b){ return pointOrderOf(a) - pointOrderOf(b); });
+    if(pts.length < 2) return;
+    const allDone = pts.every(function(x){ return x.done; });
+    const latlngs = pts.map(function(x){ return [x.lat, x.lng]; });
+    L.polyline(latlngs, {
+      color: allDone ? '#ffffff' : '#8f8f8f',
+      weight: allDone ? 4 : 2,
+      opacity: allDone ? 0.95 : 0.65,
+      dashArray: allDone ? null : '6,6'
+    }).addTo(linesLayer);
   });
 
   if(bounds.length > 0 && fitView){
@@ -816,6 +902,24 @@ document.getElementById('btnDeleteAll').addEventListener('click', async function
   await saveTransactions();
   renderAll();
 });
+
+document.getElementById('btnExportExcel').addEventListener('click', function(){
+  if(transactions.length === 0){
+    showMapWarning('لا توجد معاملات لتصديرها.');
+    return;
+  }
+  const rows = transactions.map(function(t){
+    return {
+      'اسم المعاملة': t.name,
+      'المرحلة': t.stage || 1,
+      'التاريخ': t.createdAt || ''
+    };
+  });
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'المعاملات');
+  XLSX.writeFile(wb, 'معاملات_المساحة.xlsx');
+});
 document.getElementById('btnSelectMode').addEventListener('click', function(){
   selectMode = true;
   selectedIds.clear();
@@ -950,6 +1054,16 @@ document.getElementById('btnNearest').addEventListener('click', function(){
   }, function(err){
     showMapWarning(geoErrorMessage(err));
   }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 });
+});
+
+document.getElementById('btnResetNorth').addEventListener('click', function(){
+  try{
+    if(typeof map.setBearing === 'function'){
+      map.setBearing(0);
+    }
+  }catch(e){
+    // الإضافة قد لا تدعم هذه الدالة في كل الحالات — تجاهل بصمت
+  }
 });
 
 function showNearestResult(t, distText, dir){
