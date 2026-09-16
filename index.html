@@ -4,48 +4,59 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>متابعة مواقع المعاملات - الشارقة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.2/proj4.js"></script>
 <style>
   :root{
-    --bg:#0f172a; --card:#1e293b; --accent:#38bdf8; --accent2:#22c55e;
-    --danger:#ef4444; --text:#e2e8f0; --muted:#94a3b8; --border:#334155;
+    --bg:#0a0a0a; --surface:#161616; --surface-2:#212121; --border:#333333;
+    --accent:#ffffff; --accent-ink:#0a0a0a;
+    --positive:#ffffff; --positive-ink:#0a0a0a;
+    --danger:#ff5c5c; --danger-ink:#2a0a0a;
+    --text:#f5f5f5; --muted:#8f8f8f;
   }
   *{box-sizing:border-box;}
   body{
-    margin:0; font-family:'Segoe UI', Tahoma, Arial, sans-serif;
-    background:var(--bg); color:var(--text); direction:rtl;
+    margin:0; font-family:'Tajawal', 'Segoe UI', Tahoma, Arial, sans-serif;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.04), transparent 220px),
+      var(--bg);
+    color:var(--text); direction:rtl; -webkit-tap-highlight-color:transparent;
   }
+  .mono{ font-family:'JetBrains Mono', monospace; direction:ltr; unicode-bidi:isolate; }
   header{
-    padding:14px 16px; background:var(--card); border-bottom:1px solid var(--border);
+    padding:16px; background:var(--surface); border-bottom:1px solid var(--border);
     position:sticky; top:0; z-index:1000;
+    display:flex; align-items:center; gap:12px;
   }
-  header h1{margin:0; font-size:18px;}
-  header p{margin:4px 0 0; font-size:12px; color:var(--muted);}
+  header .brand-icon{
+    width:40px; height:40px; border-radius:12px; background:var(--accent); color:var(--accent-ink);
+    display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0;
+  }
+  header h1{margin:0; font-size:16px; font-weight:700;}
+  header p{margin:2px 0 0; font-size:12px; color:var(--muted);}
   #mapWrap{ position:relative; }
-  #map{ height:42vh; width:100%; transition:height 0.2s ease; }
+  #map{ height:42vh; width:100%; transition:height 0.2s ease; background:var(--surface); }
   #map.expanded{ height:82vh; }
   .panel.hidden{ display:none; }
+  .map-fab{
+    position:absolute; z-index:1001; right:12px;
+    background:rgba(18,26,44,0.88); backdrop-filter:blur(6px);
+    color:var(--text); border:1px solid var(--border);
+    box-shadow:0 4px 14px rgba(0,0,0,0.35); cursor:pointer;
+  }
   #btnToggleMap{
-    position:absolute; top:10px; right:10px; z-index:1001;
-    background:var(--card); color:var(--text); border:1px solid var(--border);
-    border-radius:8px; padding:8px 12px; font-size:13px; font-weight:600;
-    box-shadow:0 2px 6px rgba(0,0,0,0.4); cursor:pointer;
+    top:12px; border-radius:999px; padding:9px 16px; font-size:13px; font-weight:700;
   }
   #btnMyLocation{
-    position:absolute; top:56px; right:10px; z-index:1001;
-    background:var(--card); color:var(--accent); border:1px solid var(--border);
-    border-radius:50%; width:38px; height:38px; font-size:16px;
-    box-shadow:0 2px 6px rgba(0,0,0,0.4); cursor:pointer;
+    top:60px; color:var(--accent); border-radius:50%; width:40px; height:40px; font-size:17px;
     display:flex; align-items:center; justify-content:center; padding:0;
   }
-  #btnMyLocation.active{ background:var(--accent); color:#03202f; }
+  #btnMyLocation.active{ background:var(--accent); color:var(--accent-ink); }
   #btnNearest{
-    position:absolute; top:102px; right:10px; z-index:1001;
-    background:var(--card); color:var(--accent); border:1px solid var(--border);
-    border-radius:50%; width:38px; height:38px; font-size:16px;
-    box-shadow:0 2px 6px rgba(0,0,0,0.4); cursor:pointer;
+    top:108px; color:var(--accent); border-radius:50%; width:40px; height:40px; font-size:17px;
     display:flex; align-items:center; justify-content:center; padding:0;
   }
   .my-location-dot{ position:relative; width:16px; height:16px; }
@@ -62,88 +73,116 @@
     0%{ transform:scale(1); opacity:0.8; }
     100%{ transform:scale(3.4); opacity:0; }
   }
-  .panel{ padding:14px 16px; }
+  .panel{ padding:16px; max-width:640px; margin:0 auto; }
   .card{
-    background:var(--card); border:1px solid var(--border); border-radius:10px;
-    padding:14px; margin-bottom:14px;
+    background:var(--surface); border:1px solid var(--border); border-radius:16px;
+    padding:16px; margin-bottom:14px;
   }
-  .card h3{margin:0 0 10px; font-size:15px; color:var(--accent);}
+  .card h3{
+    margin:0 0 12px; font-size:14px; font-weight:700; color:var(--text);
+    display:flex; align-items:center; gap:8px;
+  }
   .row{ display:flex; gap:8px; margin-bottom:10px; }
   .row > div{ flex:1; }
-  label{ display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
+  label{ display:block; font-size:12px; color:var(--muted); margin-bottom:5px; }
   input, select{
-    width:100%; padding:9px 10px; border-radius:8px; border:1px solid var(--border);
-    background:#0f172a; color:var(--text); font-size:14px;
+    width:100%; padding:11px 12px; border-radius:11px; border:1px solid var(--border);
+    background:var(--surface-2); color:var(--text); font-size:14px;
   }
-  input:focus{ outline:1px solid var(--accent); }
+  input::placeholder{ color:var(--muted); }
+  input:focus, select:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(255,255,255,0.15); }
   button{
-    border:none; border-radius:8px; padding:10px 14px; font-size:14px; font-weight:600;
-    cursor:pointer;
+    border:none; border-radius:999px; padding:11px 16px; font-size:14px; font-weight:700;
+    cursor:pointer; transition:transform 0.08s ease, opacity 0.15s ease;
   }
-  .btn-primary{ background:var(--accent); color:#03202f; width:100%; }
+  button:active{ transform:scale(0.97); }
+  .btn-primary{ background:var(--accent); color:var(--accent-ink); width:100%; }
   .btn-primary:disabled{ opacity:0.5; cursor:not-allowed; }
-  .btn-small{ padding:6px 10px; font-size:12px; }
-  .btn-done{ background:var(--accent2); color:#04220f; }
-  .btn-undo{ background:#475569; color:var(--text); }
+  .btn-small{ padding:7px 12px; font-size:12px; border-radius:999px; }
+  .btn-done{ background:var(--positive); color:var(--positive-ink); }
+  .btn-undo{ background:var(--surface-2); color:var(--text); border:1px solid var(--border); }
   .btn-del{ background:transparent; color:var(--danger); border:1px solid var(--danger); }
   .item{
-    display:flex; justify-content:space-between; align-items:center; gap:10px;
-    padding:10px; border:1px solid var(--border); border-radius:8px; margin-bottom:8px;
-    background:#16213a;
+    display:flex; flex-direction:column; gap:10px;
+    padding:14px; border:1px solid var(--border); border-radius:14px; margin-bottom:10px;
+    background:var(--surface-2); border-inline-start:4px solid var(--border);
   }
-  .item.done{ opacity:0.65; }
-  .item .info{ flex:1; }
-  .item .info .name{ font-weight:600; font-size:14px; }
-  .item .info .coords{ font-size:11px; color:var(--muted); direction:ltr; text-align:right; }
-  .item .actions{ display:flex; gap:6px; flex-wrap:wrap; }
+  .item.done{ opacity:0.55; }
+  .item .info{ width:100%; min-width:0; }
+  .item .info .name{ font-weight:700; font-size:14.5px; display:flex; align-items:center; flex-wrap:wrap; gap:2px; }
+  .item .info .coords{
+    font-size:12px; color:var(--muted); margin-top:4px;
+    font-family:'JetBrains Mono', monospace; direction:ltr; text-align:left;
+  }
+  .item .actions{
+    display:flex; gap:6px; flex-wrap:wrap; width:100%;
+    border-top:1px solid var(--border); padding-top:10px;
+  }
+  .item .actions > *{
+    flex:1 1 calc(50% - 6px); min-width:100px; text-align:center;
+    display:inline-flex; align-items:center; justify-content:center;
+  }
   .status-dot{
-    display:inline-block; width:9px; height:9px; border-radius:50%; margin-left:6px;
+    display:inline-block; width:8px; height:8px; border-radius:50%; margin-left:6px; flex-shrink:0;
+    border:1.5px solid var(--text); box-sizing:border-box;
   }
-  .dot-pending{ background:var(--danger); }
-  .dot-done{ background:var(--accent2); }
-  #err{ color:var(--danger); font-size:12px; margin-top:6px; display:none; }
-  #empty{ color:var(--muted); font-size:13px; text-align:center; padding:14px 0; }
-  .stats{ display:flex; gap:10px; margin-bottom:10px; font-size:12px; color:var(--muted); }
-  .stats b{ color:var(--text); }
+  .dot-pending{ background:transparent; }
+  .dot-done{ background:var(--text); }
+  #err{ color:var(--danger); font-size:12px; margin-top:8px; display:none; }
+  #empty{ color:var(--muted); font-size:13px; text-align:center; padding:16px 0; }
+  .stats{ display:flex; gap:8px; margin-bottom:12px; }
+  .stats span{
+    flex:1; text-align:center; font-size:11px; color:var(--muted); background:var(--surface-2);
+    border:1px solid var(--border); border-radius:12px; padding:8px 6px;
+  }
+  .stats b{ display:block; color:var(--text); font-size:16px; margin-top:2px; font-family:'JetBrains Mono', monospace; }
   .loading{ text-align:center; padding:20px; color:var(--muted); font-size:13px; }
   .leaflet-tooltip.point-label{
-    background:rgba(15,23,42,0.85); color:#fff; border:1px solid rgba(255,255,255,0.3);
-    border-radius:5px; padding:2px 7px; font-size:12px; font-weight:600;
-    box-shadow:none; white-space:nowrap;
+    background:rgba(10,14,26,0.9); color:#fff; border:1px solid rgba(255,255,255,0.25);
+    border-radius:6px; padding:2px 8px; font-size:12px; font-weight:700;
+    box-shadow:none; white-space:nowrap; font-family:'Tajawal', sans-serif;
   }
-  .leaflet-tooltip.point-label::before{ border-top-color:rgba(15,23,42,0.85); }
-  .tabs{ display:flex; gap:6px; margin-bottom:10px; }
+  .leaflet-tooltip.point-label::before{ border-top-color:rgba(10,14,26,0.9); }
+  .tabs{
+    display:flex; gap:4px; margin-bottom:12px; background:var(--surface-2);
+    border:1px solid var(--border); border-radius:999px; padding:4px;
+  }
   .tab-btn{
-    flex:1; padding:9px 8px; border-radius:8px; font-size:13px; font-weight:600;
-    background:#16213a; color:var(--muted); border:1px solid var(--border); cursor:pointer;
+    flex:1; padding:9px 8px; border-radius:999px; font-size:13px; font-weight:700;
+    background:transparent; color:var(--muted); border:none; cursor:pointer;
   }
-  .tab-btn.active{ background:var(--accent); color:#03202f; border-color:var(--accent); }
+  .tab-btn.active{ background:var(--accent); color:var(--accent-ink); }
   .stage-badge{
-    display:inline-block; width:20px; height:20px; border-radius:50%; color:#fff;
-    font-size:11px; font-weight:700; text-align:center; line-height:20px; margin-left:6px;
+    display:inline-flex; align-items:center; justify-content:center;
+    width:20px; height:20px; border-radius:7px; color:#fff;
+    font-size:11px; font-weight:700; margin-left:7px; flex-shrink:0;
+    font-family:'JetBrains Mono', monospace;
   }
-  #inpSearch{ margin-bottom:10px; }
+  #inpSearch{ margin-bottom:12px; }
   .date-chip{
-    padding:6px 12px; border-radius:20px; font-size:12px; font-weight:600;
-    border:1px solid var(--border); background:#16213a; color:var(--text); cursor:pointer;
+    padding:7px 14px; border-radius:999px; font-size:12px; font-weight:700;
+    border:1px solid var(--border); background:var(--surface-2); color:var(--text); cursor:pointer;
     user-select:none;
   }
-  .date-chip.active{ background:var(--accent); color:#03202f; border-color:var(--accent); }
-  .item .select-check{ width:18px; height:18px; margin-left:8px; flex-shrink:0; }
+  .date-chip.active{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  .item .select-check{ width:19px; height:19px; margin-left:8px; flex-shrink:0; accent-color:var(--accent); }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>📍 متابعة مواقع المعاملات - نظام UTM Zone 40N</h1>
-  <p>أدخل الإحداثيات الخاصة بمعاملتك ليتم تحديد موقعها تلقائياً على الخريطة</p>
+  <div class="brand-icon">📍</div>
+  <div>
+    <h1>متابعة مواقع المعاملات</h1>
+    <p>نظام UTM Zone 40N — الشارقة</p>
+  </div>
 </header>
 
 <div id="mapWrap">
   <div id="map"><div class="loading">جاري تحميل الخريطة...</div></div>
-  <button id="btnToggleMap">🔽 تكبير الخريطة</button>
-  <button id="btnMyLocation" title="موقعي الحالي">📍</button>
-  <button id="btnNearest" title="أقرب معاملة لي">📏</button>
+  <button id="btnToggleMap" class="map-fab">🔽 تكبير الخريطة</button>
+  <button id="btnMyLocation" class="map-fab" title="موقعي الحالي">📍</button>
+  <button id="btnNearest" class="map-fab" title="أقرب معاملة لي">📏</button>
 </div>
 
 <div class="panel">
@@ -185,7 +224,7 @@
   <div class="card">
     <h3>📥 إضافة عدة معاملات دفعة واحدة</h3>
     <label>ألصق الإحداثيات (كل سطر بصيغة: الاسم,E,N,المرحلة — أو E,N — أو الاسم,E,N)</label>
-    <textarea id="bulkInput" rows="4" style="width:100%; padding:9px 10px; border-radius:8px; border:1px solid var(--border); background:#0f172a; color:var(--text); font-size:13px; direction:ltr; text-align:left; resize:vertical;" placeholder="407500,2780500&#10;معاملة 55,408200,2781100,3"></textarea>
+    <textarea id="bulkInput" rows="4" style="width:100%; padding:9px 10px; border-radius:11px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:13px; direction:ltr; text-align:left; resize:vertical;" placeholder="407500,2780500&#10;معاملة 55,408200,2781100,3"></textarea>
     <button class="btn-primary" id="btnBulkAdd" style="margin-top:10px;">إضافة الكل على الخريطة</button>
     <div id="bulkErr" style="color:var(--danger); font-size:12px; margin-top:6px; display:none;"></div>
   </div>
@@ -209,13 +248,13 @@
       <button class="tab-btn" id="tabDone" data-tab="done">✅ منتهية (0)</button>
     </div>
     <div class="row" style="margin-bottom:10px;">
-      <button class="btn-small" id="btnSelectMode" style="background:#475569; color:var(--text); flex:1;">🖊️ تحديد للحذف</button>
-      <button class="btn-small" id="btnDeleteSelected" style="background:var(--danger); color:#fff; flex:1; display:none;">🗑️ حذف المحدد (0)</button>
-      <button class="btn-small" id="btnCancelSelect" style="background:#475569; color:var(--text); flex:1; display:none;">إلغاء</button>
+      <button class="btn-small" id="btnSelectMode" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;">🖊️ تحديد للحذف</button>
+      <button class="btn-small" id="btnDeleteSelected" style="background:var(--danger); color:var(--danger-ink); flex:1; display:none;">🗑️ حذف المحدد (0)</button>
+      <button class="btn-small" id="btnCancelSelect" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1; display:none;">إلغاء</button>
     </div>
     <div class="row" style="margin-bottom:10px;">
-      <button class="btn-small" id="btnMarkAllDone" style="background:var(--accent2); color:#04220f; flex:1;">✅ تحديد الكل كمنتهية</button>
-      <button class="btn-small" id="btnDeleteAll" style="background:var(--danger); color:#fff; flex:1;">🗑️ حذف كل النقاط</button>
+      <button class="btn-small" id="btnMarkAllDone" style="background:var(--positive); color:var(--positive-ink); flex:1;">✅ تحديد الكل كمنتهية</button>
+      <button class="btn-small" id="btnDeleteAll" style="background:var(--danger); color:var(--danger-ink); flex:1;">🗑️ حذف كل النقاط</button>
     </div>
     <div id="list"></div>
     <div id="empty" style="display:none;">لا توجد معاملات مضافة بعد</div>
@@ -253,9 +292,11 @@ let activeTab = 'pending'; // 'pending' أو 'done'
 let searchQuery = '';
 const STORAGE_KEY = 'sharjah_survey_transactions';
 
-const STAGE_COLORS = { 1:'#ef4444', 2:'#f97316', 3:'#eab308', 4:'#3b82f6', 5:'#22c55e' };
+const STAGE_COLORS = { 1:'#e4572e', 2:'#f0b429', 3:'#2dd4bf', 4:'#3d6cb9', 5:'#4caf6d' };
+const STAGE_INK = { 1:'#f5f5f5', 2:'#0a0a0a', 3:'#0a0a0a', 4:'#f5f5f5', 5:'#f5f5f5' };
 const STAGE_LABELS = { 1:'المرحلة الأولى', 2:'المرحلة الثانية', 3:'المرحلة الثالثة', 4:'المرحلة الرابعة', 5:'المرحلة الخامسة' };
 function stageColor(stage){ return STAGE_COLORS[stage] || STAGE_COLORS[1]; }
+function stageInk(stage){ return STAGE_INK[stage] || STAGE_INK[1]; }
 
 // ====== التخزين السحابي عبر Firebase (مستقل تماماً، يعمل بغض النظر عن كيفية فتح الملف) ======
 const FIREBASE_URL = 'https://points-project-d92b8-default-rtdb.firebaseio.com';
@@ -346,7 +387,7 @@ function showMapWarning(msg){
   if(!el){
     el = document.createElement('div');
     el.id = 'mapWarning';
-    el.style.cssText = 'background:#7c2d12; color:#fed7aa; font-size:12px; padding:8px 12px; line-height:1.6;';
+    el.style.cssText = 'background:var(--danger-ink); color:var(--danger); font-size:12px; padding:8px 12px; line-height:1.6;';
     document.getElementById('map').insertAdjacentElement('afterend', el);
   }
   el.textContent = '⚠️ ' + msg;
@@ -521,7 +562,7 @@ function renderAll(fitView){
     const stage = t.stage || 1;
     const color = stageColor(stage);
     const marker = L.circleMarker([t.lat, t.lng], {
-      radius: 9, fillColor: color, color:'#0f172a', weight:2, fillOpacity:0.9
+      radius: 9, fillColor: color, color:'#ffffff', weight:2, fillOpacity:0.95
     }).addTo(markersLayer);
 
     marker.bindTooltip(escapeHtml(t.name), {
@@ -551,21 +592,24 @@ function renderAll(fitView){
 
     const item = document.createElement('div');
     item.className = 'item' + (t.done ? ' done' : '');
+    item.style.borderInlineStartColor = stageColor(t.stage || 1);
     const checkboxHtml = selectMode
       ? '<input type="checkbox" class="select-check" data-id="' + t.id + '" ' + (selectedIds.has(t.id) ? 'checked' : '') + '>'
       : '';
     item.innerHTML =
-      checkboxHtml +
-      '<div class="info">' +
-        '<div class="name"><span class="stage-badge" style="background:' + stageColor(t.stage || 1) + ';">' + (t.stage || 1) + '</span><span class="status-dot ' + (t.done ? 'dot-done' : 'dot-pending') + '"></span>' + escapeHtml(t.name) + '</div>' +
-        '<div class="coords">E: ' + t.easting + '&nbsp;&nbsp;N: ' + t.northing + '</div>' +
-        '<div class="coords">📅 ' + (t.createdAt || 'بدون تاريخ') + '</div>' +
+      '<div style="display:flex; align-items:flex-start; gap:8px;">' +
+        checkboxHtml +
+        '<div class="info">' +
+          '<div class="name"><span class="stage-badge" style="background:' + stageColor(t.stage || 1) + '; color:' + stageInk(t.stage || 1) + ';">' + (t.stage || 1) + '</span><span class="status-dot ' + (t.done ? 'dot-done' : 'dot-pending') + '"></span>' + escapeHtml(t.name) + '</div>' +
+          '<div class="coords">E: ' + t.easting + '&nbsp;&nbsp;N: ' + t.northing + '</div>' +
+          '<div class="coords">📅 ' + (t.createdAt || 'بدون تاريخ') + '</div>' +
+        '</div>' +
       '</div>' +
       (selectMode ? '' :
       '<div class="actions">' +
-        '<a class="btn-small" style="background:#4285F4; color:#fff; text-decoration:none; display:inline-flex; align-items:center;" href="https://www.google.com/maps/dir/?api=1&destination=' + t.lat + ',' + t.lng + '&travelmode=driving" target="_blank" rel="noopener">🧭 الذهاب للموقع</a>' +
+        '<a class="btn-small" style="background:#4285F4; color:#fff; text-decoration:none;" href="https://www.google.com/maps/dir/?api=1&destination=' + t.lat + ',' + t.lng + '&travelmode=driving" target="_blank" rel="noopener">🧭 الذهاب للموقع</a>' +
         '<button class="btn-small ' + (t.done ? 'btn-undo' : 'btn-done') + '" data-action="toggle" data-id="' + t.id + '">' + (t.done ? '↩️ تراجع' : '✔️ إنهاء') + '</button>' +
-        '<button class="btn-small" style="background:var(--accent); color:#03202f;" data-action="locate" data-id="' + t.id + '">🎯</button>' +
+        '<button class="btn-small" style="background:var(--accent); color:var(--accent-ink);" data-action="locate" data-id="' + t.id + '">🎯</button>' +
         '<button class="btn-small btn-del" data-action="delete" data-id="' + t.id + '">🗑️</button>' +
       '</div>');
     listEl.appendChild(item);
@@ -579,8 +623,8 @@ function renderAll(fitView){
   const pendingCount = visible.length - doneCount;
   document.getElementById('stats').innerHTML =
     '<span>الإجمالي: <b>' + visible.length + '</b></span>' +
-    '<span>منتهية: <b style="color:var(--accent2)">' + doneCount + '</b></span>' +
-    '<span>متبقية: <b style="color:var(--danger)">' + pendingCount + '</b></span>';
+    '<span>منتهية: <b style="color:var(--positive)">' + doneCount + '</b></span>' +
+    '<span>متبقية: <b style="color:var(--text)">' + pendingCount + '</b></span>';
 
   document.getElementById('tabPending').textContent = '⏳ قيد التنفيذ (' + pendingCount + ')';
   document.getElementById('tabDone').textContent = '✅ منتهية (' + doneCount + ')';
@@ -913,12 +957,12 @@ function showNearestResult(t, distText, dir){
   if(!el){
     el = document.createElement('div');
     el.id = 'nearestBanner';
-    el.style.cssText = 'background:#0c4a6e; color:#bae6fd; padding:10px 16px; font-size:13px; line-height:1.6; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;';
+    el.style.cssText = 'background:var(--surface); color:var(--text); border-bottom:1px solid var(--border); border-inline-start:4px solid var(--accent); padding:10px 16px; font-size:13px; line-height:1.6; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;';
     document.getElementById('mapWrap').insertAdjacentElement('afterend', el);
   }
   el.innerHTML =
     '<span>📏 أقرب معاملة: <b>' + escapeHtml(t.name) + '</b> — على بعد ' + distText + ' باتجاه ' + dir + '</span>' +
-    '<button class="btn-small" style="background:var(--accent); color:#03202f;" id="btnGoNearest">🎯 اذهب إليها</button>';
+    '<button class="btn-small" style="background:var(--accent); color:var(--accent-ink);" id="btnGoNearest">🎯 اذهب إليها</button>';
   document.getElementById('btnGoNearest').addEventListener('click', function(){
     map.setView([t.lat, t.lng], 18);
   });
