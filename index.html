@@ -633,7 +633,7 @@ function renderAll(fitView){
       marker.bindTooltip(escapeHtml(t.name), {
         permanent: true,
         direction: 'top',
-        offset: [0, -10],
+        offset: [14, -10],
         className: 'point-label'
       });
 
@@ -912,7 +912,9 @@ document.getElementById('btnExportExcel').addEventListener('click', function(){
     return {
       'اسم المعاملة': t.name,
       'المرحلة': t.stage || 1,
-      'التاريخ': t.createdAt || ''
+      'التاريخ': t.createdAt || '',
+      'الإحداثي الشرقي (Easting)': t.easting,
+      'الإحداثي الشمالي (Northing)': t.northing
     };
   });
   const ws = XLSX.utils.json_to_sheet(rows);
