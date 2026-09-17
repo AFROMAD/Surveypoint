@@ -66,6 +66,11 @@
     display:flex; align-items:center; justify-content:center; padding:0;
     transition:transform 0.2s ease;
   }
+  .stage-marker{
+    width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:13px; font-family:'JetBrains Mono', monospace;
+    border:2px solid #ffffff; box-shadow:0 1px 4px rgba(0,0,0,0.6);
+  }
   .my-location-dot{ position:relative; width:16px; height:16px; }
   .my-location-dot::after{
     content:''; position:absolute; inset:0; background:#3b82f6;
@@ -307,11 +312,15 @@ let activeTab = 'pending'; // 'pending' أو 'done'
 let searchQuery = '';
 const STORAGE_KEY = 'sharjah_survey_transactions';
 
-const STAGE_COLORS = { 1:'#e4572e', 2:'#f0b429', 3:'#2dd4bf', 4:'#3d6cb9', 5:'#4caf6d' };
-const STAGE_INK = { 1:'#f5f5f5', 2:'#0a0a0a', 3:'#0a0a0a', 4:'#f5f5f5', 5:'#f5f5f5' };
+const STAGE_COLORS = { 1:'#eab308', 2:'#16a34a', 3:'#dc2626', 4:'#2563eb', 5:'#111111' };
+const STAGE_INK = { 1:'#0a0a0a', 2:'#ffffff', 3:'#ffffff', 4:'#ffffff', 5:'#ffffff' };
 const STAGE_LABELS = { 1:'المرحلة الأولى', 2:'المرحلة الثانية', 3:'المرحلة الثالثة', 4:'المرحلة الرابعة', 5:'المرحلة الخامسة' };
 function stageColor(stage){ return STAGE_COLORS[stage] || STAGE_COLORS[1]; }
 function stageInk(stage){ return STAGE_INK[stage] || STAGE_INK[1]; }
+
+const DONE_COLOR = '#8b5cf6';
+function pointColor(t){ return t.done ? DONE_COLOR : stageColor(t.stage || 1); }
+function pointInk(t){ return t.done ? '#ffffff' : stageInk(t.stage || 1); }
 
 const GROUP_COLLAPSE_ZOOM = 17; // تحت هذا المستوى تظهر أول نقطة فقط من كل معاملة متعددة النقاط
 
@@ -550,7 +559,7 @@ function renderStageLegend(){
   const wrap = document.getElementById('stageLegend');
   wrap.innerHTML = Object.keys(STAGE_COLORS).map(function(stage){
     return '<span style="display:flex; align-items:center; gap:5px; color:var(--text);">' +
-      '<span style="width:14px; height:14px; border-radius:50%; background:' + STAGE_COLORS[stage] + '; display:inline-block;"></span>' +
+      '<span style="width:18px; height:18px; border-radius:50%; background:' + STAGE_COLORS[stage] + '; color:' + STAGE_INK[stage] + '; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; font-family:\'JetBrains Mono\', monospace;">' + stage + '</span>' +
       STAGE_LABELS[stage] +
       '</span>';
   }).join('');
@@ -622,13 +631,18 @@ function renderAll(fitView){
   visible.forEach(function(t){
     const gKey = groupKeyOf(t);
     const stage = t.stage || 1;
-    const color = stageColor(stage);
+    const color = pointColor(t);
     const isCollapsed = collapsedIds.has(t.id);
 
     if(!isCollapsed){
-      const marker = L.circleMarker([t.lat, t.lng], {
-        radius: 9, fillColor: color, color:'#ffffff', weight:2, fillOpacity:0.95
-      }).addTo(markersLayer);
+      const ink = pointInk(t);
+      const icon = L.divIcon({
+        className: '',
+        html: '<div class="stage-marker" style="background:' + color + '; color:' + ink + ';">' + stage + '</div>',
+        iconSize: [26, 26],
+        iconAnchor: [13, 13]
+      });
+      const marker = L.marker([t.lat, t.lng], { icon: icon }).addTo(markersLayer);
 
       marker.bindTooltip(escapeHtml(t.name), {
         permanent: true,
@@ -665,7 +679,7 @@ function renderAll(fitView){
 
     const item = document.createElement('div');
     item.className = 'item' + (t.done ? ' done' : '');
-    item.style.borderInlineStartColor = stageColor(t.stage || 1);
+    item.style.borderInlineStartColor = pointColor(t);
     const checkboxHtml = selectMode
       ? '<input type="checkbox" class="select-check" data-id="' + t.id + '" ' + (selectedIds.has(t.id) ? 'checked' : '') + '>'
       : '';
@@ -673,7 +687,7 @@ function renderAll(fitView){
       '<div style="display:flex; align-items:flex-start; gap:8px;">' +
         checkboxHtml +
         '<div class="info">' +
-          '<div class="name"><span class="stage-badge" style="background:' + stageColor(t.stage || 1) + '; color:' + stageInk(t.stage || 1) + ';">' + (t.stage || 1) + '</span><span class="status-dot ' + (t.done ? 'dot-done' : 'dot-pending') + '"></span>' + escapeHtml(t.name) + '</div>' +
+          '<div class="name"><span class="stage-badge" style="background:' + pointColor(t) + '; color:' + pointInk(t) + ';">' + (t.stage || 1) + '</span><span class="status-dot ' + (t.done ? 'dot-done' : 'dot-pending') + '"></span>' + escapeHtml(t.name) + '</div>' +
           '<div class="coords">E: ' + t.easting + '&nbsp;&nbsp;N: ' + t.northing + '</div>' +
           '<div class="coords">📅 ' + (t.createdAt || 'بدون تاريخ') + '</div>' +
         '</div>' +
@@ -843,6 +857,16 @@ async function bulkAddTransactions(){
 
 document.getElementById('btnBulkAdd').addEventListener('click', bulkAddTransactions);
 
+function toggleDoneWithGroup(t){
+  t.done = !t.done;
+  if(t.done){
+    const gKey = groupKeyOf(t);
+    transactions.forEach(function(x){
+      if(x.id !== t.id && groupKeyOf(x) === gKey){ x.done = true; }
+    });
+  }
+}
+
 document.getElementById('list').addEventListener('click', async function(e){
   const btn = e.target.closest('button');
   if(!btn) return;
@@ -852,7 +876,7 @@ document.getElementById('list').addEventListener('click', async function(e){
   if(!t) return;
 
   if(action === 'toggle'){
-    t.done = !t.done;
+    toggleDoneWithGroup(t);
     await saveTransactions();
     renderAll();
   } else if(action === 'delete'){
@@ -954,7 +978,7 @@ document.addEventListener('click', async function(e){
   const id = toggleBtn.getAttribute('data-toggle-id');
   const t = transactions.find(x => x.id === id);
   if(!t) return;
-  t.done = !t.done;
+  toggleDoneWithGroup(t);
   await saveTransactions();
   renderAll(false);
   if(map){ map.closePopup(); }
