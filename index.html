@@ -66,6 +66,18 @@
     display:flex; align-items:center; justify-content:center; padding:0;
     transition:transform 0.2s ease;
   }
+  .group-header{
+    font-size:12px; font-weight:700; color:var(--muted);
+    padding:10px 4px 4px; margin-top:4px; border-bottom:1px dashed var(--border);
+  }
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:2000;
+    display:flex; align-items:center; justify-content:center; padding:16px;
+  }
+  .modal-box{
+    background:var(--surface); border:1px solid var(--border); border-radius:16px;
+    padding:16px; width:100%; max-width:420px; box-shadow:0 8px 24px rgba(0,0,0,0.5);
+  }
   .stage-marker{
     width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
     font-weight:800; font-size:13px; font-family:'JetBrains Mono', monospace;
@@ -672,35 +684,65 @@ function renderAll(fitView){
     }
 
     bounds.push([t.lat, t.lng]);
-
-    const matchesTab = (activeTab === 'done') ? t.done : !t.done;
-    if(!matchesTab) return;
-    itemsShown++;
-
-    const item = document.createElement('div');
-    item.className = 'item' + (t.done ? ' done' : '');
-    item.style.borderInlineStartColor = pointColor(t);
-    const checkboxHtml = selectMode
-      ? '<input type="checkbox" class="select-check" data-id="' + t.id + '" ' + (selectedIds.has(t.id) ? 'checked' : '') + '>'
-      : '';
-    item.innerHTML =
-      '<div style="display:flex; align-items:flex-start; gap:8px;">' +
-        checkboxHtml +
-        '<div class="info">' +
-          '<div class="name"><span class="stage-badge" style="background:' + pointColor(t) + '; color:' + pointInk(t) + ';">' + (t.stage || 1) + '</span><span class="status-dot ' + (t.done ? 'dot-done' : 'dot-pending') + '"></span>' + escapeHtml(t.name) + '</div>' +
-          '<div class="coords">E: ' + t.easting + '&nbsp;&nbsp;N: ' + t.northing + '</div>' +
-          '<div class="coords">📅 ' + (t.createdAt || 'بدون تاريخ') + '</div>' +
-        '</div>' +
-      '</div>' +
-      (selectMode ? '' :
-      '<div class="actions">' +
-        '<a class="btn-small" style="background:#4285F4; color:#fff; text-decoration:none;" href="https://www.google.com/maps/dir/?api=1&destination=' + t.lat + ',' + t.lng + '&travelmode=driving" target="_blank" rel="noopener">🧭 الذهاب للموقع</a>' +
-        '<button class="btn-small ' + (t.done ? 'btn-undo' : 'btn-done') + '" data-action="toggle" data-id="' + t.id + '">' + (t.done ? '↩️ تراجع' : '✔️ إنهاء') + '</button>' +
-        '<button class="btn-small" style="background:var(--accent); color:var(--accent-ink);" data-action="locate" data-id="' + t.id + '">🎯</button>' +
-        '<button class="btn-small btn-del" data-action="delete" data-id="' + t.id + '">🗑️</button>' +
-      '</div>');
-    listEl.appendChild(item);
   });
+
+  function buildTransactionList(){
+    const itemById = {};
+    const groupOrder = [];
+    const seenGroups = {};
+
+    visible.forEach(function(t){
+      const matchesTab = (activeTab === 'done') ? t.done : !t.done;
+      if(!matchesTab) return;
+      itemsShown++;
+
+      const gKey = groupKeyOf(t);
+      if(!seenGroups[gKey]){ seenGroups[gKey] = true; groupOrder.push(gKey); }
+
+      const item = document.createElement('div');
+      item.className = 'item' + (t.done ? ' done' : '');
+      item.style.borderInlineStartColor = pointColor(t);
+      const checkboxHtml = selectMode
+        ? '<input type="checkbox" class="select-check" data-id="' + t.id + '" ' + (selectedIds.has(t.id) ? 'checked' : '') + '>'
+        : '';
+      item.innerHTML =
+        '<div style="display:flex; align-items:flex-start; gap:8px;">' +
+          checkboxHtml +
+          '<div class="info">' +
+            '<div class="name"><span class="stage-badge" style="background:' + pointColor(t) + '; color:' + pointInk(t) + ';">' + (t.stage || 1) + '</span><span class="status-dot ' + (t.done ? 'dot-done' : 'dot-pending') + '"></span>' + escapeHtml(t.name) + '</div>' +
+            '<div class="coords">E: ' + t.easting + '&nbsp;&nbsp;N: ' + t.northing + '</div>' +
+            '<div class="coords">📅 ' + (t.createdAt || 'بدون تاريخ') + '</div>' +
+            (t.notes ? '<div style="font-size:12px; color:var(--text); margin-top:4px; direction:rtl;">📝 ' + escapeHtml(t.notes.length > 60 ? t.notes.slice(0, 60) + '…' : t.notes) + '</div>' : '') +
+          '</div>' +
+        '</div>' +
+        (selectMode ? '' :
+        '<div class="actions">' +
+          '<a class="btn-small" style="background:#4285F4; color:#fff; text-decoration:none;" href="https://www.google.com/maps/dir/?api=1&destination=' + t.lat + ',' + t.lng + '&travelmode=driving" target="_blank" rel="noopener">🧭 الذهاب للموقع</a>' +
+          '<button class="btn-small ' + (t.done ? 'btn-undo' : 'btn-done') + '" data-action="toggle" data-id="' + t.id + '">' + (t.done ? '↩️ تراجع' : '✔️ إنهاء') + '</button>' +
+          '<button class="btn-small" style="background:var(--accent); color:var(--accent-ink);" data-action="locate" data-id="' + t.id + '">🎯</button>' +
+          '<button class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border);" data-action="notes" data-id="' + t.id + '">' + (t.notes ? '📝 تعديل' : '📝 ملاحظة') + '</button>' +
+          '<button class="btn-small btn-del" data-action="delete" data-id="' + t.id + '">🗑️</button>' +
+        '</div>');
+
+      itemById[t.id] = item;
+    });
+
+    groupOrder.forEach(function(key){
+      const members = (groups[key] || []).slice().sort(function(a, b){ return pointOrderOf(a) - pointOrderOf(b); });
+      const presentItems = members.map(function(m){ return itemById[m.id]; }).filter(Boolean);
+      if(presentItems.length === 0) return;
+
+      if(members.length > 1){
+        const header = document.createElement('div');
+        header.className = 'group-header';
+        header.textContent = '📁 معاملة رقم ' + key + ' — ' + presentItems.length + ' نقطة';
+        listEl.appendChild(header);
+      }
+      presentItems.forEach(function(item){ listEl.appendChild(item); });
+    });
+  }
+
+  buildTransactionList();
 
   Object.keys(groups).forEach(function(key){
     const pts = groups[key].slice().sort(function(a, b){ return pointOrderOf(a) - pointOrderOf(b); });
@@ -859,12 +901,11 @@ document.getElementById('btnBulkAdd').addEventListener('click', bulkAddTransacti
 
 function toggleDoneWithGroup(t){
   t.done = !t.done;
-  if(t.done){
-    const gKey = groupKeyOf(t);
-    transactions.forEach(function(x){
-      if(x.id !== t.id && groupKeyOf(x) === gKey){ x.done = true; }
-    });
-  }
+  const newState = t.done;
+  const gKey = groupKeyOf(t);
+  transactions.forEach(function(x){
+    if(x.id !== t.id && groupKeyOf(x) === gKey){ x.done = newState; }
+  });
 }
 
 document.getElementById('list').addEventListener('click', async function(e){
@@ -885,7 +926,41 @@ document.getElementById('list').addEventListener('click', async function(e){
     renderAll();
   } else if(action === 'locate'){
     map.setView([t.lat, t.lng], 17);
+  } else if(action === 'notes'){
+    openNotesModal(t);
   }
+});
+
+let notesEditingId = null;
+
+function openNotesModal(t){
+  notesEditingId = t.id;
+  document.getElementById('notesModalName').textContent = t.name;
+  document.getElementById('notesModalText').value = t.notes || '';
+  document.getElementById('notesModal').style.display = 'flex';
+  document.getElementById('notesModalText').focus();
+}
+
+function closeNotesModal(){
+  document.getElementById('notesModal').style.display = 'none';
+  notesEditingId = null;
+}
+
+document.getElementById('btnNotesCancel').addEventListener('click', closeNotesModal);
+
+document.getElementById('notesModal').addEventListener('click', function(e){
+  if(e.target === this){ closeNotesModal(); }
+});
+
+document.getElementById('btnNotesSave').addEventListener('click', async function(){
+  if(!notesEditingId) return;
+  const t = transactions.find(x => x.id === notesEditingId);
+  if(!t){ closeNotesModal(); return; }
+  const val = document.getElementById('notesModalText').value.trim();
+  t.notes = val;
+  closeNotesModal();
+  await saveTransactions();
+  renderAll(false);
 });
 
 document.getElementById('list').addEventListener('change', function(e){
@@ -938,7 +1013,8 @@ document.getElementById('btnExportExcel').addEventListener('click', function(){
       'المرحلة': t.stage || 1,
       'التاريخ': t.createdAt || '',
       'الإحداثي الشرقي (Easting)': t.easting,
-      'الإحداثي الشمالي (Northing)': t.northing
+      'الإحداثي الشمالي (Northing)': t.northing,
+      'ملاحظات': t.notes || ''
     };
   });
   const ws = XLSX.utils.json_to_sheet(rows);
@@ -1141,6 +1217,18 @@ document.getElementById('btnToggleMap').addEventListener('click', function(){
   setTimeout(() => { if(map) map.invalidateSize(); }, 210);
 });
 </script>
+
+<div id="notesModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <h3 style="margin:0 0 4px; font-size:15px; color:var(--accent);">📝 ملاحظات المعاملة</h3>
+    <div id="notesModalName" style="font-size:13px; color:var(--muted); margin-bottom:10px;"></div>
+    <textarea id="notesModalText" rows="5" placeholder="اكتب ملاحظاتك هنا..." style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:14px; resize:vertical;"></textarea>
+    <div class="row" style="margin-top:10px;">
+      <button id="btnNotesSave" class="btn-small" style="background:var(--accent); color:var(--accent-ink); flex:1;">💾 حفظ</button>
+      <button id="btnNotesCancel" class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;">إلغاء</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
