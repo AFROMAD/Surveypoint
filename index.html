@@ -312,6 +312,18 @@
 
 </div>
 
+<div id="notesModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <h3 style="margin:0 0 4px; font-size:15px; color:var(--accent);">📝 ملاحظات المعاملة</h3>
+    <div id="notesModalName" style="font-size:13px; color:var(--muted); margin-bottom:10px;"></div>
+    <textarea id="notesModalText" rows="5" placeholder="اكتب ملاحظاتك هنا..." style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:14px; resize:vertical;"></textarea>
+    <div class="row" style="margin-top:10px;">
+      <button id="btnNotesSave" class="btn-small" style="background:var(--accent); color:var(--accent-ink); flex:1;">💾 حفظ</button>
+      <button id="btnNotesCancel" class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;">إلغاء</button>
+    </div>
+  </div>
+</div>
+
 <script>
 proj4.defs("EPSG:32640", "+proj=utm +zone=40 +datum=WGS84 +units=m +no_defs");
 
@@ -1217,18 +1229,6 @@ document.getElementById('btnToggleMap').addEventListener('click', function(){
   setTimeout(() => { if(map) map.invalidateSize(); }, 210);
 });
 </script>
-
-<div id="notesModal" class="modal-overlay" style="display:none;">
-  <div class="modal-box">
-    <h3 style="margin:0 0 4px; font-size:15px; color:var(--accent);">📝 ملاحظات المعاملة</h3>
-    <div id="notesModalName" style="font-size:13px; color:var(--muted); margin-bottom:10px;"></div>
-    <textarea id="notesModalText" rows="5" placeholder="اكتب ملاحظاتك هنا..." style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:14px; resize:vertical;"></textarea>
-    <div class="row" style="margin-top:10px;">
-      <button id="btnNotesSave" class="btn-small" style="background:var(--accent); color:var(--accent-ink); flex:1;">💾 حفظ</button>
-      <button id="btnNotesCancel" class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;">إلغاء</button>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
