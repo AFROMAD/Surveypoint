@@ -73,14 +73,6 @@
     background:var(--surface); border-radius:8px 8px 0 0;
   }
   .group-header:active{ opacity:0.8; }
-  .modal-overlay{
-    position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:2000;
-    display:flex; align-items:center; justify-content:center; padding:16px;
-  }
-  .modal-box{
-    background:var(--surface); border:1px solid var(--border); border-radius:16px;
-    padding:16px; width:100%; max-width:420px; box-shadow:0 8px 24px rgba(0,0,0,0.5);
-  }
   .stage-marker{
     width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
     font-weight:800; font-size:13px; font-family:'JetBrains Mono', monospace;
@@ -315,18 +307,6 @@
 
 </div>
 
-<div id="notesModal" class="modal-overlay" style="display:none;">
-  <div class="modal-box">
-    <h3 style="margin:0 0 4px; font-size:15px; color:var(--accent);">📝 ملاحظات المعاملة</h3>
-    <div id="notesModalName" style="font-size:13px; color:var(--muted); margin-bottom:10px;"></div>
-    <textarea id="notesModalText" rows="5" placeholder="اكتب ملاحظاتك هنا..." style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:14px; resize:vertical;"></textarea>
-    <div class="row" style="margin-top:10px;">
-      <button id="btnNotesSave" class="btn-small" style="background:var(--accent); color:var(--accent-ink); flex:1;">💾 حفظ</button>
-      <button id="btnNotesCancel" class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;">إلغاء</button>
-    </div>
-  </div>
-</div>
-
 <script>
 proj4.defs("EPSG:32640", "+proj=utm +zone=40 +datum=WGS84 +units=m +no_defs");
 
@@ -337,7 +317,7 @@ let selectMode = false;
 let selectedIds = new Set();
 let activeTab = 'pending'; // 'pending' أو 'done'
 let searchQuery = '';
-let collapsedGroups = new Set();
+let expandedGroups = new Set(); // فارغة = كل المجموعات مطوية افتراضياً
 const STORAGE_KEY = 'sharjah_survey_transactions';
 
 const STAGE_COLORS = { 1:'#eab308', 2:'#16a34a', 3:'#dc2626', 4:'#2563eb', 5:'#111111' };
@@ -728,7 +708,6 @@ function renderAll(fitView){
             '<div class="name"><span class="stage-badge" style="background:' + pointColor(t) + '; color:' + pointInk(t) + ';">' + (t.stage || 1) + '</span><span class="status-dot ' + (t.done ? 'dot-done' : 'dot-pending') + '"></span>' + escapeHtml(t.name) + '</div>' +
             '<div class="coords">E: ' + t.easting + '&nbsp;&nbsp;N: ' + t.northing + '</div>' +
             '<div class="coords">📅 ' + (t.createdAt || 'بدون تاريخ') + '</div>' +
-            (t.notes ? '<div style="font-size:12px; color:var(--text); margin-top:4px; direction:rtl;">📝 ' + escapeHtml(t.notes.length > 60 ? t.notes.slice(0, 60) + '…' : t.notes) + '</div>' : '') +
           '</div>' +
         '</div>' +
         (selectMode ? '' :
@@ -736,7 +715,6 @@ function renderAll(fitView){
           '<a class="btn-small" style="background:#4285F4; color:#fff; text-decoration:none;" href="https://www.google.com/maps/dir/?api=1&destination=' + t.lat + ',' + t.lng + '&travelmode=driving" target="_blank" rel="noopener">🧭 الذهاب للموقع</a>' +
           '<button class="btn-small ' + (t.done ? 'btn-undo' : 'btn-done') + '" data-action="toggle" data-id="' + t.id + '">' + (t.done ? '↩️ تراجع' : '✔️ إنهاء') + '</button>' +
           '<button class="btn-small" style="background:var(--accent); color:var(--accent-ink);" data-action="locate" data-id="' + t.id + '">🎯</button>' +
-          '<button class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border);" data-action="notes" data-id="' + t.id + '">' + (t.notes ? '📝 تعديل' : '📝 ملاحظة') + '</button>' +
           '<button class="btn-small btn-del" data-action="delete" data-id="' + t.id + '">🗑️</button>' +
         '</div>');
 
@@ -749,12 +727,13 @@ function renderAll(fitView){
       if(presentItems.length === 0) return;
 
       if(members.length > 1){
-        const isCollapsed = collapsedGroups.has(key);
+        const isCollapsed = !expandedGroups.has(key);
+        const repStage = members[0].stage || 1;
         const header = document.createElement('div');
         header.className = 'group-header';
-        header.innerHTML = '<span>' + (isCollapsed ? '▶' : '▼') + '</span><span>📁 معاملة رقم ' + key + ' — ' + presentItems.length + ' نقطة</span>';
+        header.innerHTML = '<span>' + (isCollapsed ? '▶' : '▼') + '</span><span>📁 ارض رقم ' + key + ' — مرحلة رقم ' + repStage + ' — ' + presentItems.length + ' نقطة</span>';
         header.addEventListener('click', function(){
-          if(collapsedGroups.has(key)){ collapsedGroups.delete(key); } else { collapsedGroups.add(key); }
+          if(expandedGroups.has(key)){ expandedGroups.delete(key); } else { expandedGroups.add(key); }
           renderAll(false);
         });
         listEl.appendChild(header);
@@ -950,41 +929,7 @@ document.getElementById('list').addEventListener('click', async function(e){
     const mapWrapEl = document.getElementById('mapWrap');
     if(mapWrapEl){ mapWrapEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
     map.setView([t.lat, t.lng], 17);
-  } else if(action === 'notes'){
-    openNotesModal(t);
   }
-});
-
-let notesEditingId = null;
-
-function openNotesModal(t){
-  notesEditingId = t.id;
-  document.getElementById('notesModalName').textContent = t.name;
-  document.getElementById('notesModalText').value = t.notes || '';
-  document.getElementById('notesModal').style.display = 'flex';
-  document.getElementById('notesModalText').focus();
-}
-
-function closeNotesModal(){
-  document.getElementById('notesModal').style.display = 'none';
-  notesEditingId = null;
-}
-
-document.getElementById('btnNotesCancel').addEventListener('click', closeNotesModal);
-
-document.getElementById('notesModal').addEventListener('click', function(e){
-  if(e.target === this){ closeNotesModal(); }
-});
-
-document.getElementById('btnNotesSave').addEventListener('click', async function(){
-  if(!notesEditingId) return;
-  const t = transactions.find(x => x.id === notesEditingId);
-  if(!t){ closeNotesModal(); return; }
-  const val = document.getElementById('notesModalText').value.trim();
-  t.notes = val;
-  closeNotesModal();
-  await saveTransactions();
-  renderAll(false);
 });
 
 document.getElementById('list').addEventListener('change', function(e){
@@ -1037,8 +982,7 @@ document.getElementById('btnExportExcel').addEventListener('click', function(){
       'المرحلة': t.stage || 1,
       'التاريخ': t.createdAt || '',
       'الإحداثي الشرقي (Easting)': t.easting,
-      'الإحداثي الشمالي (Northing)': t.northing,
-      'ملاحظات': t.notes || ''
+      'الإحداثي الشمالي (Northing)': t.northing
     };
   });
   const ws = XLSX.utils.json_to_sheet(rows);
