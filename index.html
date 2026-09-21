@@ -66,6 +66,10 @@
     display:flex; align-items:center; justify-content:center; padding:0;
     transition:transform 0.2s ease;
   }
+  #btnZoomExtent{
+    top:204px; color:var(--accent); border-radius:50%; width:40px; height:40px; font-size:17px;
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
   .group-header{
     font-size:13px; font-weight:700; color:var(--text);
     padding:10px 6px; margin-top:6px; border-bottom:1px dashed var(--border);
@@ -211,6 +215,7 @@
   <button id="btnMyLocation" class="map-fab" title="موقعي الحالي">📍</button>
   <button id="btnNearest" class="map-fab" title="أقرب معاملة لي">📏</button>
   <button id="btnResetNorth" class="map-fab" title="إعادة توجيه الشمال">🧭</button>
+  <button id="btnZoomExtent" class="map-fab" title="عرض كل النقاط">🔎</button>
 </div>
 
 <div class="panel">
@@ -1169,6 +1174,15 @@ document.getElementById('btnResetNorth').addEventListener('click', function(){
   }catch(e){
     // الإضافة قد لا تدعم هذه الدالة في كل الحالات — تجاهل بصمت
   }
+});
+
+document.getElementById('btnZoomExtent').addEventListener('click', function(){
+  if(transactions.length === 0){
+    showMapWarning('لا توجد معاملات مضافة بعد لعرضها.');
+    return;
+  }
+  const allBounds = transactions.map(function(t){ return [t.lat, t.lng]; });
+  map.fitBounds(allBounds, { padding: [40, 40], maxZoom: 18 });
 });
 
 function showNearestResult(t, distText, dir){
