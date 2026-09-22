@@ -310,6 +310,24 @@
   </div>
 </div>
 
+<div id="stageModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <h3 style="margin:0 0 4px; font-size:15px; color:var(--accent);">✏️ تعديل مرحلة المعاملة</h3>
+    <div id="stageModalName" style="font-size:13px; color:var(--muted); margin-bottom:10px;"></div>
+    <select id="stageModalSelect">
+      <option value="1">1️⃣ المرحلة الأولى</option>
+      <option value="2">2️⃣ المرحلة الثانية</option>
+      <option value="3">3️⃣ المرحلة الثالثة</option>
+      <option value="4">4️⃣ المرحلة الرابعة</option>
+      <option value="5">5️⃣ المرحلة الخامسة</option>
+    </select>
+    <div class="row" style="margin-top:10px;">
+      <button id="btnStageSave" class="btn-small" style="background:var(--accent); color:var(--accent-ink); flex:1;">💾 حفظ</button>
+      <button id="btnStageCancel" class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;">إلغاء</button>
+    </div>
+  </div>
+</div>
+
 <script>
 proj4.defs("EPSG:32640", "+proj=utm +zone=40 +datum=WGS84 +units=m +no_defs");
 
@@ -720,6 +738,7 @@ function renderAll(fitView){
           '<button class="btn-small ' + (t.done ? 'btn-undo' : 'btn-done') + '" data-action="toggle" data-id="' + t.id + '">' + (t.done ? '↩️ تراجع' : '✔️ إنهاء') + '</button>' +
           '<button class="btn-small" style="background:var(--accent); color:var(--accent-ink);" data-action="locate" data-id="' + t.id + '">🎯</button>' +
           '<button class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border);" data-action="notes" data-id="' + t.id + '">' + (t.notes ? '📝 تعديل' : '📝 ملاحظة') + '</button>' +
+          '<button class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border);" data-action="editstage" data-id="' + t.id + '">✏️ المرحلة</button>' +
           '<button class="btn-small btn-del" data-action="delete" data-id="' + t.id + '">🗑️</button>' +
         '</div>');
 
@@ -936,7 +955,40 @@ document.getElementById('list').addEventListener('click', async function(e){
     map.setView([t.lat, t.lng], 17);
   } else if(action === 'notes'){
     openNotesModal(t);
+  } else if(action === 'editstage'){
+    openStageModal(t);
   }
+});
+
+let stageEditingId = null;
+
+function openStageModal(t){
+  stageEditingId = t.id;
+  document.getElementById('stageModalName').textContent = t.name;
+  document.getElementById('stageModalSelect').value = String(t.stage || 1);
+  document.getElementById('stageModal').style.display = 'flex';
+}
+
+function closeStageModal(){
+  document.getElementById('stageModal').style.display = 'none';
+  stageEditingId = null;
+}
+
+document.getElementById('btnStageCancel').addEventListener('click', closeStageModal);
+
+document.getElementById('stageModal').addEventListener('click', function(e){
+  if(e.target === this){ closeStageModal(); }
+});
+
+document.getElementById('btnStageSave').addEventListener('click', async function(){
+  if(!stageEditingId) return;
+  const t = transactions.find(x => x.id === stageEditingId);
+  if(!t){ closeStageModal(); return; }
+  const val = parseInt(document.getElementById('stageModalSelect').value, 10);
+  t.stage = (val >= 1 && val <= 5) ? val : 1;
+  closeStageModal();
+  await saveTransactions();
+  renderAll(false);
 });
 
 let notesEditingId = null;
