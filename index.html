@@ -194,6 +194,8 @@
   <div class="modal-box" style="max-width:360px;">
     <h3 style="margin:0 0 4px; font-size:17px; color:var(--accent);">🔐 تسجيل الدخول</h3>
     <p style="font-size:12.5px; color:var(--muted); margin:0 0 12px;">كل مستخدم يشوف معاملاته الخاصة فقط.</p>
+    <label id="authNameLabel" style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">الاسم (عند إنشاء حساب جديد)</label>
+    <input id="authName" type="text" placeholder="اسمك" style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:14px; margin-bottom:10px;" autocomplete="name">
     <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">البريد الإلكتروني</label>
     <input id="authEmail" type="email" placeholder="example@mail.com" style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:14px; margin-bottom:10px;" autocomplete="username">
     <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">كلمة المرور</label>
@@ -215,7 +217,8 @@
     <h1>متابعة مواقع المعاملات</h1>
     <p>نظام UTM Zone 40N — الشارقة</p>
   </div>
-  <button id="btnLogout" title="تسجيل الخروج" style="margin-right:auto; background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:10px; padding:8px 12px; font-size:12.5px; font-family:inherit; cursor:pointer;">خروج 🚪</button>
+  <span id="currentUserLabel" style="margin-right:auto; font-size:12.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px;"></span>
+  <button id="btnLogout" title="تسجيل الخروج" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:10px; padding:8px 12px; font-size:12.5px; font-family:inherit; cursor:pointer; flex-shrink:0;">خروج 🚪</button>
 </header>
 
 <div id="mapWrap">
@@ -483,10 +486,16 @@ document.getElementById('btnAuthLogin').addEventListener('click', function(){
 
 document.getElementById('btnAuthSignup').addEventListener('click', function(){
   showAuthError('');
+  const name = document.getElementById('authName').value.trim();
   const email = document.getElementById('authEmail').value.trim();
   const pass = document.getElementById('authPassword').value;
+  if(!name){ showAuthError('الرجاء إدخال الاسم.'); return; }
   if(!email || !pass){ showAuthError('الرجاء إدخال البريد وكلمة المرور.'); return; }
-  auth.createUserWithEmailAndPassword(email, pass).catch(function(err){
+  auth.createUserWithEmailAndPassword(email, pass).then(function(cred){
+    return cred.user.updateProfile({ displayName: name });
+  }).then(function(){
+    updateUserLabel(auth.currentUser);
+  }).catch(function(err){
     showAuthError(authErrorMessage(err));
   });
 });
@@ -502,14 +511,23 @@ document.getElementById('btnAuthReset').addEventListener('click', function(){
   });
 });
 
+function updateUserLabel(user){
+  const el = document.getElementById('currentUserLabel');
+  if(!el) return;
+  el.textContent = user ? ('👤 ' + (user.displayName || user.email)) : '';
+  if(user) el.title = user.email;
+}
+
 auth.onAuthStateChanged(function(user){
   if(user){
     currentUid = user.uid;
+    updateUserLabel(user);
     document.getElementById('authOverlay').style.display = 'none';
     document.getElementById('appRoot').style.display = '';
     loadTransactions();
   } else {
     currentUid = null;
+    updateUserLabel(null);
     document.getElementById('authOverlay').style.display = 'flex';
     document.getElementById('appRoot').style.display = 'none';
   }
