@@ -191,21 +191,22 @@
 <body>
 
 <div id="authOverlay" class="modal-overlay" style="display:flex; z-index:3000;">
-  <div class="modal-box" style="max-width:360px;">
-    <h3 style="margin:0 0 4px; font-size:17px; color:var(--accent);">🔐 تسجيل الدخول</h3>
-    <p style="font-size:12.5px; color:var(--muted); margin:0 0 12px;">كل مستخدم يشوف معاملاته الخاصة فقط.</p>
-    <label id="authNameLabel" style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">الاسم (عند إنشاء حساب جديد)</label>
-    <input id="authName" type="text" placeholder="اسمك" style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:14px; margin-bottom:10px;" autocomplete="name">
-    <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">البريد الإلكتروني</label>
+  <div class="modal-box" style="max-width:360px; position:relative;">
+    <button id="btnLangAuth" title="Switch language" style="position:absolute; top:14px; left:14px; background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:10px; padding:6px 10px; font-size:12px; font-family:inherit; cursor:pointer;">EN</button>
+    <h3 data-i18n="auth_title" style="margin:0 0 4px; font-size:17px; color:var(--accent);">🔐 تسجيل الدخول</h3>
+    <p data-i18n="auth_subtitle" style="font-size:12.5px; color:var(--muted); margin:0 0 12px;">كل مستخدم يشوف معاملاته الخاصة فقط.</p>
+    <label id="authNameLabel" data-i18n="auth_name_label" style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">الاسم (عند إنشاء حساب جديد)</label>
+    <input id="authName" type="text" data-i18n-ph="auth_name_ph" placeholder="اسمك" style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:14px; margin-bottom:10px;" autocomplete="name">
+    <label data-i18n="auth_email_label" style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">البريد الإلكتروني</label>
     <input id="authEmail" type="email" placeholder="example@mail.com" style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:14px; margin-bottom:10px;" autocomplete="username">
-    <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">كلمة المرور</label>
+    <label data-i18n="auth_password_label" style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">كلمة المرور</label>
     <input id="authPassword" type="password" placeholder="••••••••" style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:14px;" autocomplete="current-password">
     <div id="authError" style="color:var(--danger); font-size:12.5px; margin-top:8px; display:none;"></div>
     <div class="row" style="margin-top:12px;">
-      <button id="btnAuthLogin" class="btn-small" style="background:var(--accent); color:var(--accent-ink); flex:1;">دخول</button>
-      <button id="btnAuthSignup" class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;">حساب جديد</button>
+      <button id="btnAuthLogin" class="btn-small" data-i18n="btn_login" style="background:var(--accent); color:var(--accent-ink); flex:1;">دخول</button>
+      <button id="btnAuthSignup" class="btn-small" data-i18n="btn_signup" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;">حساب جديد</button>
     </div>
-    <button id="btnAuthReset" style="background:none; border:none; color:var(--muted); font-size:12px; margin-top:12px; cursor:pointer; text-decoration:underline; padding:0;">نسيت كلمة المرور؟</button>
+    <button id="btnAuthReset" data-i18n="btn_forgot" style="background:none; border:none; color:var(--muted); font-size:12px; margin-top:12px; cursor:pointer; text-decoration:underline; padding:0;">نسيت كلمة المرور؟</button>
   </div>
 </div>
 
@@ -214,120 +215,121 @@
 <header>
   <div class="brand-icon">📍</div>
   <div>
-    <h1>متابعة مواقع المعاملات</h1>
-    <p>نظام UTM Zone 40N — الشارقة</p>
+    <h1 data-i18n="app_title">متابعة مواقع المعاملات</h1>
+    <p data-i18n="app_subtitle">نظام UTM Zone 40N — الشارقة</p>
   </div>
   <span id="currentUserLabel" style="margin-right:auto; font-size:12.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px;"></span>
-  <button id="btnLogout" title="تسجيل الخروج" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:10px; padding:8px 12px; font-size:12.5px; font-family:inherit; cursor:pointer; flex-shrink:0;">خروج 🚪</button>
+  <button id="btnLang" title="Switch language" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:10px; padding:8px 10px; font-size:12.5px; font-family:inherit; cursor:pointer; flex-shrink:0;">EN</button>
+  <button id="btnLogout" data-i18n-title="logout_title" title="تسجيل الخروج" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:10px; padding:8px 12px; font-size:12.5px; font-family:inherit; cursor:pointer; flex-shrink:0;"><span data-i18n="btn_logout">خروج 🚪</span></button>
 </header>
 
 <div id="mapWrap">
-  <div id="map"><div class="loading">جاري تحميل الخريطة...</div></div>
-  <button id="btnToggleMap" class="map-fab">🔽 تكبير الخريطة</button>
-  <button id="btnMyLocation" class="map-fab" title="موقعي الحالي">📍</button>
-  <button id="btnNearest" class="map-fab" title="أقرب معاملة لي">📏</button>
-  <button id="btnResetNorth" class="map-fab" title="إعادة توجيه الشمال">🧭</button>
-  <button id="btnZoomExtent" class="map-fab" title="عرض كل النقاط">🔎</button>
+  <div id="map"><div class="loading" data-i18n="map_loading">جاري تحميل الخريطة...</div></div>
+  <button id="btnToggleMap" class="map-fab" data-i18n="btn_expand_map">🔽 تكبير الخريطة</button>
+  <button id="btnMyLocation" class="map-fab" data-i18n-title="loc_title" title="موقعي الحالي">📍</button>
+  <button id="btnNearest" class="map-fab" data-i18n-title="nearest_title" title="أقرب معاملة لي">📏</button>
+  <button id="btnResetNorth" class="map-fab" data-i18n-title="north_title" title="إعادة توجيه الشمال">🧭</button>
+  <button id="btnZoomExtent" class="map-fab" data-i18n-title="extent_title" title="عرض كل النقاط">🔎</button>
 </div>
 
 <div class="tabs" style="margin:12px 16px 0;">
-  <button class="tab-btn active" id="viewTabTransactions">📋 المعاملات</button>
-  <button class="tab-btn" id="viewTabElevations">📐 مناسيب الصجعة</button>
+  <button class="tab-btn active" id="viewTabTransactions" data-i18n="tab_transactions">📋 المعاملات</button>
+  <button class="tab-btn" id="viewTabElevations" data-i18n="tab_elevations">📐 مناسيب الصجعة</button>
 </div>
 
 <div class="panel" id="transactionsView">
 
   <div class="card">
-    <h3>➕ إضافة معاملة جديدة</h3>
+    <h3 data-i18n="add_title">➕ إضافة معاملة جديدة</h3>
     <div class="row">
       <div>
-        <label>اسم / رقم المعاملة</label>
-        <input id="inpName" type="text" placeholder="مثال: معاملة رقم 1234">
+        <label data-i18n="name_label">اسم / رقم المعاملة</label>
+        <input id="inpName" type="text" data-i18n-ph="name_ph" placeholder="مثال: معاملة رقم 1234">
       </div>
     </div>
     <div class="row">
       <div>
-        <label>الإحداثي الشرقي Easting (X) - متر</label>
-        <input id="inpE" type="number" step="any" placeholder="مثال: 407500">
+        <label data-i18n="easting_label">الإحداثي الشرقي Easting (X) - متر</label>
+        <input id="inpE" type="number" step="any" placeholder="مثال: 407500" data-i18n-ph="easting_ph">
       </div>
       <div>
-        <label>الإحداثي الشمالي Northing (Y) - متر</label>
-        <input id="inpN" type="number" step="any" placeholder="مثال: 2780500">
+        <label data-i18n="northing_label">الإحداثي الشمالي Northing (Y) - متر</label>
+        <input id="inpN" type="number" step="any" placeholder="مثال: 2780500" data-i18n-ph="northing_ph">
       </div>
     </div>
     <div class="row">
       <div>
-        <label>مرحلة المعاملة</label>
+        <label data-i18n="stage_label">مرحلة المعاملة</label>
         <select id="inpStage">
-          <option value="1">1️⃣ المرحلة الأولى</option>
-          <option value="2">2️⃣ المرحلة الثانية</option>
-          <option value="3">3️⃣ المرحلة الثالثة</option>
-          <option value="4">4️⃣ المرحلة الرابعة</option>
-          <option value="5">5️⃣ المرحلة الخامسة</option>
+          <option value="1" data-i18n="stage_opt_1">1️⃣ المرحلة الأولى</option>
+          <option value="2" data-i18n="stage_opt_2">2️⃣ المرحلة الثانية</option>
+          <option value="3" data-i18n="stage_opt_3">3️⃣ المرحلة الثالثة</option>
+          <option value="4" data-i18n="stage_opt_4">4️⃣ المرحلة الرابعة</option>
+          <option value="5" data-i18n="stage_opt_5">5️⃣ المرحلة الخامسة</option>
         </select>
       </div>
     </div>
-    <button class="btn-primary" id="btnAdd">إضافة على الخريطة</button>
+    <button class="btn-primary" id="btnAdd" data-i18n="btn_add">إضافة على الخريطة</button>
     <div id="err"></div>
   </div>
 
   <div class="card">
-    <h3>📥 إضافة عدة معاملات دفعة واحدة</h3>
-    <label>ألصق الإحداثيات (كل سطر بصيغة: الاسم,E,N,المرحلة — أو E,N — أو الاسم,E,N)</label>
-    <textarea id="bulkInput" rows="4" style="width:100%; padding:9px 10px; border-radius:11px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:13px; direction:ltr; text-align:left; resize:vertical;" placeholder="407500,2780500&#10;معاملة 55,408200,2781100,3"></textarea>
-    <button class="btn-primary" id="btnBulkAdd" style="margin-top:10px;">إضافة الكل على الخريطة</button>
+    <h3 data-i18n="bulk_title">📥 إضافة عدة معاملات دفعة واحدة</h3>
+    <label data-i18n="bulk_label">ألصق الإحداثيات (كل سطر بصيغة: الاسم,E,N,المرحلة — أو E,N — أو الاسم,E,N)</label>
+    <textarea id="bulkInput" rows="4" style="width:100%; padding:9px 10px; border-radius:11px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:13px; direction:ltr; text-align:left; resize:vertical;" placeholder="407500,2780500&#10;معاملة 55,408200,2781100,3" data-i18n-ph="bulk_ph"></textarea>
+    <button class="btn-primary" id="btnBulkAdd" style="margin-top:10px;" data-i18n="btn_bulk_add">إضافة الكل على الخريطة</button>
     <div id="bulkErr" style="color:var(--danger); font-size:12px; margin-top:6px; display:none;"></div>
   </div>
 
   <div class="card">
-    <h3>🎨 دليل ألوان المراحل</h3>
+    <h3 data-i18n="legend_title">🎨 دليل ألوان المراحل</h3>
     <div id="stageLegend" style="display:flex; flex-wrap:wrap; gap:10px; font-size:12px;"></div>
   </div>
 
   <div class="card">
-    <h3>📋 قائمة المعاملات</h3>
+    <h3 data-i18n="list_title">📋 قائمة المعاملات</h3>
     <div class="tabs" id="statusTabs">
       <button class="tab-btn" id="tabPending" data-tab="pending">⏳ قيد التنفيذ (0)</button>
       <button class="tab-btn" id="tabDone" data-tab="done">✅ منتهية (0)</button>
     </div>
     <div class="row" style="margin-bottom:10px;">
-      <button class="btn-small" id="btnSelectMode" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;">🖊️ تحديد للحذف</button>
+      <button class="btn-small" id="btnSelectMode" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;" data-i18n="btn_select_mode">🖊️ تحديد للحذف</button>
       <button class="btn-small" id="btnDeleteSelected" style="background:var(--danger); color:var(--danger-ink); flex:1; display:none;">🗑️ حذف المحدد (0)</button>
-      <button class="btn-small" id="btnCancelSelect" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1; display:none;">إلغاء</button>
+      <button class="btn-small" id="btnCancelSelect" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1; display:none;" data-i18n="btn_cancel">إلغاء</button>
     </div>
     <div class="row" style="margin-bottom:10px;">
-      <button class="btn-small" id="btnMarkAllDone" style="background:var(--positive); color:var(--positive-ink); flex:1;">✅ تحديد الكل كمنتهية</button>
-      <button class="btn-small" id="btnDeleteAll" style="background:var(--danger); color:var(--danger-ink); flex:1;">🗑️ حذف كل النقاط</button>
+      <button class="btn-small" id="btnMarkAllDone" style="background:var(--positive); color:var(--positive-ink); flex:1;" data-i18n="btn_mark_all_done">✅ تحديد الكل كمنتهية</button>
+      <button class="btn-small" id="btnDeleteAll" style="background:var(--danger); color:var(--danger-ink); flex:1;" data-i18n="btn_delete_all">🗑️ حذف كل النقاط</button>
     </div>
     <div class="row" style="margin-bottom:10px;">
-      <button class="btn-small" id="btnExportExcel" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;">📊 تصدير إلى Excel</button>
+      <button class="btn-small" id="btnExportExcel" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;" data-i18n="btn_export_excel">📊 تصدير إلى Excel</button>
     </div>
     <div id="list"></div>
-    <div id="empty" style="display:none;">لا توجد معاملات مضافة بعد</div>
+    <div id="empty" style="display:none;" data-i18n="empty_default">لا توجد معاملات مضافة بعد</div>
   </div>
 
 </div>
 
 <div class="panel" id="elevationsView" style="display:none;">
   <div class="card">
-    <h3>📐 مناسيب الصجعة</h3>
-    <p style="font-size:13px; color:var(--muted); line-height:1.8; margin:0 0 10px;">
+    <h3 data-i18n="tab_elevations">📐 مناسيب الصجعة</h3>
+    <p style="font-size:13px; color:var(--muted); line-height:1.8; margin:0 0 10px;" data-i18n="elev_desc">
       عرض للرجوع فقط — نقاط منسوب ثابتة، بدون تعديل أو إضافة.
     </p>
     <div class="tabs" style="margin-bottom:0;">
       <span style="flex:1; text-align:center; padding:9px 8px; font-size:13px; color:var(--muted);">
-        عدد النقاط: <b id="elevCount" style="color:var(--text); font-family:'JetBrains Mono', monospace;">0</b>
+        <span data-i18n="elev_count_label">عدد النقاط:</span> <b id="elevCount" style="color:var(--text); font-family:'JetBrains Mono', monospace;">0</b>
       </span>
     </div>
     <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-top:10px;">
-      <span>أقل منسوب: <b id="elevMin" style="color:var(--text); font-family:'JetBrains Mono', monospace;">-</b></span>
-      <span>أعلى منسوب: <b id="elevMax" style="color:var(--text); font-family:'JetBrains Mono', monospace;">-</b></span>
+      <span><span data-i18n="elev_min_label">أقل منسوب:</span> <b id="elevMin" style="color:var(--text); font-family:'JetBrains Mono', monospace;">-</b></span>
+      <span><span data-i18n="elev_max_label">أعلى منسوب:</span> <b id="elevMax" style="color:var(--text); font-family:'JetBrains Mono', monospace;">-</b></span>
     </div>
     <div id="elevGradientBar" style="height:14px; border-radius:7px; margin-top:10px; border:1px solid var(--border);"></div>
     <p style="font-size:11px; color:var(--muted); margin:4px 0 0; display:flex; justify-content:space-between;">
-      <span>الأقل</span><span>الأعلى</span>
+      <span data-i18n="elev_low">الأقل</span><span data-i18n="elev_high">الأعلى</span>
     </p>
-    <p style="font-size:12px; color:var(--muted); margin-top:14px;">
+    <p style="font-size:12px; color:var(--muted); margin-top:14px;" data-i18n="elev_hint">
       اضغط على أي نقطة على الخريطة لعرض قيمة المنسوب الخاصة بها.
     </p>
   </div>
@@ -335,30 +337,30 @@
 
 <div id="notesModal" class="modal-overlay" style="display:none;">
   <div class="modal-box">
-    <h3 style="margin:0 0 4px; font-size:15px; color:var(--accent);">📝 ملاحظات المعاملة</h3>
+    <h3 style="margin:0 0 4px; font-size:15px; color:var(--accent);" data-i18n="notes_title">📝 ملاحظات المعاملة</h3>
     <div id="notesModalName" style="font-size:13px; color:var(--muted); margin-bottom:10px;"></div>
-    <textarea id="notesModalText" rows="5" placeholder="اكتب ملاحظاتك هنا..." style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:14px; resize:vertical;"></textarea>
+    <textarea id="notesModalText" rows="5" placeholder="اكتب ملاحظاتك هنا..." data-i18n-ph="notes_ph" style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:14px; resize:vertical;"></textarea>
     <div class="row" style="margin-top:10px;">
-      <button id="btnNotesSave" class="btn-small" style="background:var(--accent); color:var(--accent-ink); flex:1;">💾 حفظ</button>
-      <button id="btnNotesCancel" class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;">إلغاء</button>
+      <button id="btnNotesSave" class="btn-small" style="background:var(--accent); color:var(--accent-ink); flex:1;" data-i18n="btn_save">💾 حفظ</button>
+      <button id="btnNotesCancel" class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;" data-i18n="btn_cancel">إلغاء</button>
     </div>
   </div>
 </div>
 
 <div id="stageModal" class="modal-overlay" style="display:none;">
   <div class="modal-box">
-    <h3 style="margin:0 0 4px; font-size:15px; color:var(--accent);">✏️ تعديل مرحلة المعاملة</h3>
+    <h3 style="margin:0 0 4px; font-size:15px; color:var(--accent);" data-i18n="stage_modal_title">✏️ تعديل مرحلة المعاملة</h3>
     <div id="stageModalName" style="font-size:13px; color:var(--muted); margin-bottom:10px;"></div>
     <select id="stageModalSelect">
-      <option value="1">1️⃣ المرحلة الأولى</option>
-      <option value="2">2️⃣ المرحلة الثانية</option>
-      <option value="3">3️⃣ المرحلة الثالثة</option>
-      <option value="4">4️⃣ المرحلة الرابعة</option>
-      <option value="5">5️⃣ المرحلة الخامسة</option>
+      <option value="1" data-i18n="stage_opt_1">1️⃣ المرحلة الأولى</option>
+      <option value="2" data-i18n="stage_opt_2">2️⃣ المرحلة الثانية</option>
+      <option value="3" data-i18n="stage_opt_3">3️⃣ المرحلة الثالثة</option>
+      <option value="4" data-i18n="stage_opt_4">4️⃣ المرحلة الرابعة</option>
+      <option value="5" data-i18n="stage_opt_5">5️⃣ المرحلة الخامسة</option>
     </select>
     <div class="row" style="margin-top:10px;">
-      <button id="btnStageSave" class="btn-small" style="background:var(--accent); color:var(--accent-ink); flex:1;">💾 حفظ</button>
-      <button id="btnStageCancel" class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;">إلغاء</button>
+      <button id="btnStageSave" class="btn-small" style="background:var(--accent); color:var(--accent-ink); flex:1;" data-i18n="btn_save">💾 حفظ</button>
+      <button id="btnStageCancel" class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;" data-i18n="btn_cancel">إلغاء</button>
     </div>
   </div>
 </div>
@@ -367,6 +369,198 @@
 
 <script>
 proj4.defs("EPSG:32640", "+proj=utm +zone=40 +datum=WGS84 +units=m +no_defs");
+
+// ====== نظام اللغة (عربي / إنجليزي) ======
+let lang = localStorage.getItem('app_lang') || 'ar';
+
+const TRANSLATIONS = {
+  auth_title: { ar:'🔐 تسجيل الدخول', en:'🔐 Sign In' },
+  auth_subtitle: { ar:'كل مستخدم يشوف معاملاته الخاصة فقط.', en:'Each user only sees their own transactions.' },
+  auth_name_label: { ar:'الاسم (عند إنشاء حساب جديد)', en:'Name (for new account)' },
+  auth_name_ph: { ar:'اسمك', en:'Your name' },
+  auth_email_label: { ar:'البريد الإلكتروني', en:'Email' },
+  auth_password_label: { ar:'كلمة المرور', en:'Password' },
+  btn_login: { ar:'دخول', en:'Sign In' },
+  btn_signup: { ar:'حساب جديد', en:'Sign Up' },
+  btn_forgot: { ar:'نسيت كلمة المرور؟', en:'Forgot password?' },
+  app_title: { ar:'متابعة مواقع المعاملات', en:'Transaction Location Tracker' },
+  app_subtitle: { ar:'نظام UTM Zone 40N — الشارقة', en:'UTM Zone 40N System — Sharjah' },
+  logout_title: { ar:'تسجيل الخروج', en:'Sign out' },
+  btn_logout: { ar:'خروج 🚪', en:'Sign out 🚪' },
+  map_loading: { ar:'جاري تحميل الخريطة...', en:'Loading map...' },
+  btn_expand_map: { ar:'🔽 تكبير الخريطة', en:'🔽 Expand map' },
+  btn_collapse_map: { ar:'🔼 إظهار القوائم', en:'🔼 Show lists' },
+  loc_title: { ar:'موقعي الحالي', en:'My location' },
+  nearest_title: { ar:'أقرب معاملة لي', en:'Nearest transaction' },
+  north_title: { ar:'إعادة توجيه الشمال', en:'Reset north' },
+  extent_title: { ar:'عرض كل النقاط', en:'Zoom to all points' },
+  tab_transactions: { ar:'📋 المعاملات', en:'📋 Transactions' },
+  tab_elevations: { ar:'📐 مناسيب الصجعة', en:'📐 Al Sajaa Elevations' },
+  add_title: { ar:'➕ إضافة معاملة جديدة', en:'➕ Add new transaction' },
+  name_label: { ar:'اسم / رقم المعاملة', en:'Transaction name / number' },
+  name_ph: { ar:'مثال: معاملة رقم 1234', en:'e.g. Transaction 1234' },
+  easting_label: { ar:'الإحداثي الشرقي Easting (X) - متر', en:'Easting (X) - meters' },
+  easting_ph: { ar:'مثال: 407500', en:'e.g. 407500' },
+  northing_label: { ar:'الإحداثي الشمالي Northing (Y) - متر', en:'Northing (Y) - meters' },
+  northing_ph: { ar:'مثال: 2780500', en:'e.g. 2780500' },
+  stage_label: { ar:'مرحلة المعاملة', en:'Transaction stage' },
+  stage_opt_1: { ar:'1️⃣ المرحلة الأولى', en:'1️⃣ Stage 1' },
+  stage_opt_2: { ar:'2️⃣ المرحلة الثانية', en:'2️⃣ Stage 2' },
+  stage_opt_3: { ar:'3️⃣ المرحلة الثالثة', en:'3️⃣ Stage 3' },
+  stage_opt_4: { ar:'4️⃣ المرحلة الرابعة', en:'4️⃣ Stage 4' },
+  stage_opt_5: { ar:'5️⃣ المرحلة الخامسة', en:'5️⃣ Stage 5' },
+  btn_add: { ar:'إضافة على الخريطة', en:'Add to map' },
+  bulk_title: { ar:'📥 إضافة عدة معاملات دفعة واحدة', en:'📥 Add multiple transactions at once' },
+  bulk_label: { ar:'ألصق الإحداثيات (كل سطر بصيغة: الاسم,E,N,المرحلة — أو E,N — أو الاسم,E,N)', en:'Paste coordinates (each line: Name,E,N,Stage — or E,N — or Name,E,N)' },
+  bulk_ph: { ar:'407500,2780500\nمعاملة 55,408200,2781100,3', en:'407500,2780500\nTransaction 55,408200,2781100,3' },
+  btn_bulk_add: { ar:'إضافة الكل على الخريطة', en:'Add all to map' },
+  legend_title: { ar:'🎨 دليل ألوان المراحل', en:'🎨 Stage color legend' },
+  list_title: { ar:'📋 قائمة المعاملات', en:'📋 Transaction list' },
+  tab_pending: { ar:'⏳ قيد التنفيذ', en:'⏳ Pending' },
+  tab_done: { ar:'✅ منتهية', en:'✅ Done' },
+  btn_select_mode: { ar:'🖊️ تحديد للحذف', en:'🖊️ Select to delete' },
+  btn_delete_selected: { ar:'🗑️ حذف المحدد', en:'🗑️ Delete selected' },
+  btn_cancel: { ar:'إلغاء', en:'Cancel' },
+  btn_mark_all_done: { ar:'✅ تحديد الكل كمنتهية', en:'✅ Mark all as done' },
+  btn_delete_all: { ar:'🗑️ حذف كل النقاط', en:'🗑️ Delete all points' },
+  btn_export_excel: { ar:'📊 تصدير إلى Excel', en:'📊 Export to Excel' },
+  empty_default: { ar:'لا توجد معاملات مضافة بعد', en:'No transactions added yet' },
+  empty_tab: { ar:'لا توجد معاملات ضمن هذا التبويب', en:'No transactions in this tab' },
+  empty_done: { ar:'لا توجد معاملات منتهية بعد', en:'No completed transactions yet' },
+  elev_desc: { ar:'عرض للرجوع فقط — نقاط منسوب ثابتة، بدون تعديل أو إضافة.', en:'Reference only — fixed elevation points, no editing or adding.' },
+  elev_count_label: { ar:'عدد النقاط:', en:'Point count:' },
+  elev_min_label: { ar:'أقل منسوب:', en:'Min elevation:' },
+  elev_max_label: { ar:'أعلى منسوب:', en:'Max elevation:' },
+  elev_low: { ar:'الأقل', en:'Low' },
+  elev_high: { ar:'الأعلى', en:'High' },
+  elev_hint: { ar:'اضغط على أي نقطة على الخريطة لعرض قيمة المنسوب الخاصة بها.', en:'Tap any point on the map to see its elevation value.' },
+  notes_title: { ar:'📝 ملاحظات المعاملة', en:'📝 Transaction notes' },
+  notes_ph: { ar:'اكتب ملاحظاتك هنا...', en:'Write your notes here...' },
+  btn_save: { ar:'💾 حفظ', en:'💾 Save' },
+  stage_modal_title: { ar:'✏️ تعديل مرحلة المعاملة', en:'✏️ Edit transaction stage' },
+  elev_popup: { ar:'📐 المنسوب:', en:'📐 Elevation:' },
+  unit_m: { ar:'م', en:'m' },
+  err_name_required: { ar:'الرجاء إدخال اسم أو رقم المعاملة.', en:'Please enter a transaction name or number.' },
+  err_coords_required: { ar:'الرجاء إدخال الإحداثي الشرقي والشمالي.', en:'Please enter easting and northing.' },
+  err_coords_invalid: { ar:'الإحداثيات المدخلة غير صحيحة.', en:'The entered coordinates are invalid.' },
+  err_easting_range: { ar:'قيمة الإحداثي الشرقي (Easting) تبدو غير منطقية لمنطقة الشارقة: ', en:'Easting value looks out of range for Sharjah: ' },
+  err_northing_range: { ar:'قيمة الإحداثي الشمالي (Northing) تبدو غير منطقية لمنطقة الشارقة: ', en:'Northing value looks out of range for Sharjah: ' },
+  err_convert_failed: { ar:'تعذر تحويل الإحداثيات: ', en:'Failed to convert coordinates: ' },
+  err_save_failed: { ar:'تعذر حفظ البيانات على هذا الجهاز.', en:'Failed to save data on this device.' },
+  bulk_line_unclear: { ar:'صيغة غير مفهومة', en:'Unrecognized format' },
+  bulk_added_summary: { ar:'تمت إضافة', en:'Added' },
+  bulk_of: { ar:'من', en:'of' },
+  bulk_errors: { ar:'الأخطاء:', en:'Errors:' },
+  bulk_line: { ar:'السطر', en:'Line' },
+  auto_name_prefix: { ar:'معاملة', en:'Transaction' },
+  no_date: { ar:'بدون تاريخ', en:'No date' },
+  status_done: { ar:'✅ منتهية', en:'✅ Done' },
+  status_pending: { ar:'⏳ قيد التنفيذ', en:'⏳ Pending' },
+  btn_goto: { ar:'🧭 الذهاب للموقع', en:'🧭 Go to location' },
+  btn_finish: { ar:'✔️ إنهاء', en:'✔️ Finish' },
+  btn_undo: { ar:'↩️ تراجع', en:'↩️ Undo' },
+  btn_share: { ar:'📤 مشاركة الموقع', en:'📤 Share location' },
+  btn_notes_new: { ar:'📝 ملاحظة', en:'📝 Note' },
+  btn_notes_edit: { ar:'📝 تعديل', en:'📝 Edit' },
+  btn_edit_stage: { ar:'✏️ المرحلة', en:'✏️ Stage' },
+  group_land: { ar:'📁 ارض رقم', en:'📁 Land No.' },
+  group_stage: { ar:'مرحلة رقم', en:'stage' },
+  group_points: { ar:'نقطة', en:'points' },
+  confirm_mark_all: { ar:'هل تريد تحديد جميع المعاملات (%n) كمنتهية؟', en:'Mark all transactions (%n) as done?' },
+  confirm_delete_all: { ar:'⚠️ هل أنت متأكد من حذف جميع المعاملات (%n)؟ هذا الإجراء لا يمكن التراجع عنه.', en:'⚠️ Delete all transactions (%n)? This cannot be undone.' },
+  no_transactions_export: { ar:'لا توجد معاملات لتصديرها.', en:'No transactions to export.' },
+  no_transactions_yet: { ar:'لا توجد معاملات مضافة بعد.', en:'No transactions added yet.' },
+  no_geo_support: { ar:'المتصفح لا يدعم تحديد الموقع.', en:'This browser does not support location services.' },
+  no_transactions_filter: { ar:'لا توجد معاملات ضمن التصفية الحالية.', en:'No transactions in the current filter.' },
+  no_transactions_extent: { ar:'لا توجد معاملات مضافة بعد لعرضها.', en:'No transactions added yet to display.' },
+  nearest_result: { ar:'📏 أقرب معاملة:', en:'📏 Nearest transaction:' },
+  nearest_dist: { ar:'على بعد', en:'is' },
+  nearest_dir: { ar:'باتجاه', en:'away, heading' },
+  btn_go_there: { ar:'🎯 اذهب إليها', en:'🎯 Go there' },
+  dir_n: { ar:'شمال', en:'North' },
+  dir_ne: { ar:'شمال شرق', en:'Northeast' },
+  dir_e: { ar:'شرق', en:'East' },
+  dir_se: { ar:'جنوب شرق', en:'Southeast' },
+  dir_s: { ar:'جنوب', en:'South' },
+  dir_sw: { ar:'جنوب غرب', en:'Southwest' },
+  dir_w: { ar:'غرب', en:'West' },
+  dir_nw: { ar:'شمال غرب', en:'Northwest' },
+  km: { ar:'كم', en:'km' },
+  confirm_logout: { ar:'هل تريد تسجيل الخروج؟', en:'Do you want to sign out?' },
+  share_loc_text: { ar:'موقع معاملة: ', en:'Transaction location: ' },
+  share_copied: { ar:'تم نسخ رابط الموقع، الصقه في أي تطبيق:\n', en:'Location link copied, paste it in any app:\n' },
+  copy_link_prompt: { ar:'انسخ رابط الموقع:', en:'Copy the location link:' },
+  xls_name: { ar:'اسم المعاملة', en:'Transaction Name' },
+  xls_stage: { ar:'المرحلة', en:'Stage' },
+  xls_date: { ar:'التاريخ', en:'Date' },
+  xls_easting: { ar:'الإحداثي الشرقي (Easting)', en:'Easting' },
+  xls_northing: { ar:'الإحداثي الشمالي (Northing)', en:'Northing' },
+  xls_notes: { ar:'ملاحظات', en:'Notes' },
+  xls_sheet: { ar:'المعاملات', en:'Transactions' },
+  xls_file: { ar:'معاملات_المساحة.xlsx', en:'survey_transactions.xlsx' },
+  err_geo_denied: { ar:'تم رفض إذن الوصول للموقع. فعّله من: إعدادات الجهاز ← الخصوصية/الموقع ← فعّل خدمة الموقع لهذا المتصفح، ثم أعد تحميل الصفحة وحاول مجدداً.', en:'Location access was denied. Enable it from device settings → Privacy/Location → allow this browser, then reload and try again.' },
+  err_geo_unavailable: { ar:'تعذر تحديد موقعك حالياً — تأكد من تفعيل خدمة الموقع (GPS) في الجهاز، وأنك في مكان مفتوح بعيد عن المباني.', en:'Could not determine your location — check that GPS is enabled and you are in an open area.' },
+  err_geo_timeout: { ar:'استغرق تحديد الموقع وقتاً طويلاً — تأكد من تفعيل GPS وحاول مرة أخرى.', en:'Locating took too long — check GPS is on and try again.' },
+  err_geo_generic: { ar:'تعذر تحديد موقعك.', en:'Could not determine your location.' },
+  err_tile_sat: { ar:'تعذر تحميل صور القمر الصناعي (قد يكون بسبب الإنترنت أو حجب الموقع). تم التبديل لخريطة بديلة، أو افتح الملف من متصفح Chrome مباشرة بدل فتحه داخل واتساب/تيليجرام.', en:'Failed to load satellite imagery. Switched to a backup map — or open this in Chrome directly instead of inside WhatsApp/Telegram.' },
+  err_tile_street: { ar:'تعذر تحميل صور الخريطة العادية أيضاً — تحقق من اتصال الإنترنت، أو افتح الملف من متصفح Chrome مباشرة بدل فتحه داخل تطبيق آخر (واتساب/تيليجرام).', en:'Failed to load the backup map too — check your internet connection, or open this in Chrome directly.' },
+  auth_err_invalid_email: { ar:'صيغة البريد الإلكتروني غير صحيحة.', en:'Invalid email format.' },
+  auth_err_user_not_found: { ar:'لا يوجد حساب بهذا البريد.', en:'No account found with this email.' },
+  auth_err_wrong_password: { ar:'كلمة المرور غير صحيحة.', en:'Incorrect password.' },
+  auth_err_email_in_use: { ar:'هذا البريد مسجّل مسبقاً — جرّب تسجيل الدخول بدلاً من إنشاء حساب.', en:'This email is already registered — try signing in instead.' },
+  auth_err_weak_password: { ar:'كلمة المرور ضعيفة — استخدم 6 أحرف على الأقل.', en:'Weak password — use at least 6 characters.' },
+  auth_err_invalid_cred: { ar:'البريد أو كلمة المرور غير صحيحة.', en:'Incorrect email or password.' },
+  auth_err_missing_password: { ar:'الرجاء إدخال كلمة المرور.', en:'Please enter a password.' },
+  auth_err_generic: { ar:'تعذر تسجيل الدخول: ', en:'Sign-in failed: ' },
+  auth_err_name_required: { ar:'الرجاء إدخال الاسم.', en:'Please enter your name.' },
+  auth_err_fields_required: { ar:'الرجاء إدخال البريد وكلمة المرور.', en:'Please enter email and password.' },
+  auth_err_email_first: { ar:'اكتب بريدك الإلكتروني أولاً ثم اضغط "نسيت كلمة المرور".', en:'Enter your email first, then tap "Forgot password".' },
+  auth_reset_sent: { ar:'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك.', en:'A password reset link has been sent to your email.' }
+};
+
+function tr(key){
+  const entry = TRANSLATIONS[key];
+  if(!entry) return key;
+  return entry[lang] || entry.ar;
+}
+
+function tn(key, n){
+  return tr(key).replace('%n', n);
+}
+
+function applyStaticI18n(){
+  document.documentElement.lang = (lang === 'ar') ? 'ar' : 'en';
+  document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    el.textContent = tr(el.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(function(el){
+    el.placeholder = tr(el.getAttribute('data-i18n-ph'));
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(function(el){
+    el.title = tr(el.getAttribute('data-i18n-title'));
+  });
+  const langBtn = document.getElementById('btnLang');
+  if(langBtn) langBtn.textContent = (lang === 'ar') ? 'EN' : 'عربي';
+  const langBtnAuth = document.getElementById('btnLangAuth');
+  if(langBtnAuth) langBtnAuth.textContent = (lang === 'ar') ? 'EN' : 'عربي';
+}
+
+function setLang(newLang){
+  lang = newLang;
+  try{ localStorage.setItem('app_lang', lang); }catch(e){}
+  applyStaticI18n();
+  if(typeof STAGE_LABELS !== 'undefined'){
+    STAGE_LABELS[1] = tr('stage_opt_1').replace(/^[0-9]️⃣\s*/,'');
+    STAGE_LABELS[2] = tr('stage_opt_2').replace(/^[0-9]️⃣\s*/,'');
+    STAGE_LABELS[3] = tr('stage_opt_3').replace(/^[0-9]️⃣\s*/,'');
+    STAGE_LABELS[4] = tr('stage_opt_4').replace(/^[0-9]️⃣\s*/,'');
+    STAGE_LABELS[5] = tr('stage_opt_5').replace(/^[0-9]️⃣\s*/,'');
+  }
+  if(typeof renderAll === 'function' && map){ renderAll(false); }
+  if(typeof updateUserLabel === 'function'){ updateUserLabel(); }
+}
+// ====== نهاية نظام اللغة ======
 
 let map, markersLayer, linesLayer, elevLayer;
 let currentView = 'transactions'; // 'transactions' أو 'elevations'
@@ -412,15 +606,21 @@ function pointOrderOf(t){
 }
 
 // ====== Firebase: تسجيل الدخول + تخزين خاص بكل مستخدم ======
-// ⚠️ عبّئ القيم التالية من: Firebase Console → إعدادات المشروع → عام → تطبيقات الويب
 const firebaseConfig = {
   apiKey: "AIzaSyCUy3oSkw9X9oY3g6cuUXLYGm8kRipVXno",
   authDomain: "points-project-d92b8.firebaseapp.com",
   databaseURL: "https://points-project-d92b8-default-rtdb.firebaseio.com",
   projectId: "points-project-d92b8"
 };
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
+
+let auth = null;
+let firebaseInitError = null;
+try{
+  firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+}catch(e){
+  firebaseInitError = e;
+}
 
 const FIREBASE_URL = firebaseConfig.databaseURL;
 let currentUid = null;
@@ -430,9 +630,10 @@ function userPath(){
 }
 
 async function cloudLoad(){
-  if(!currentUid) return null;
+  if(!currentUid || !auth || !auth.currentUser) return null;
   try{
-    const res = await fetch(FIREBASE_URL + '/' + userPath() + '.json?auth=' + await auth.currentUser.getIdToken());
+    const token = await auth.currentUser.getIdToken();
+    const res = await fetch(FIREBASE_URL + '/' + userPath() + '.json?auth=' + token);
     if(!res.ok) return null;
     const data = await res.json();
     return Array.isArray(data) ? data : null;
@@ -442,7 +643,7 @@ async function cloudLoad(){
 }
 
 async function cloudSave(data){
-  if(!currentUid) return;
+  if(!currentUid || !auth || !auth.currentUser) return;
   try{
     const token = await auth.currentUser.getIdToken();
     await fetch(FIREBASE_URL + '/' + userPath() + '.json?auth=' + token, {
@@ -456,16 +657,16 @@ async function cloudSave(data){
 }
 
 function authErrorMessage(err){
-  const map = {
-    'auth/invalid-email': 'صيغة البريد الإلكتروني غير صحيحة.',
-    'auth/user-not-found': 'لا يوجد حساب بهذا البريد.',
-    'auth/wrong-password': 'كلمة المرور غير صحيحة.',
-    'auth/email-already-in-use': 'هذا البريد مسجّل مسبقاً — جرّب تسجيل الدخول بدلاً من إنشاء حساب.',
-    'auth/weak-password': 'كلمة المرور ضعيفة — استخدم 6 أحرف على الأقل.',
-    'auth/invalid-credential': 'البريد أو كلمة المرور غير صحيحة.',
-    'auth/missing-password': 'الرجاء إدخال كلمة المرور.'
+  const errMap = {
+    'auth/invalid-email': tr('auth_err_invalid_email'),
+    'auth/user-not-found': tr('auth_err_user_not_found'),
+    'auth/wrong-password': tr('auth_err_wrong_password'),
+    'auth/email-already-in-use': tr('auth_err_email_in_use'),
+    'auth/weak-password': tr('auth_err_weak_password'),
+    'auth/invalid-credential': tr('auth_err_invalid_cred'),
+    'auth/missing-password': tr('auth_err_missing_password')
   };
-  return map[err.code] || ('تعذر تسجيل الدخول: ' + (err.message || err.code || ''));
+  return errMap[err.code] || (tr('auth_err_generic') + (err.message || err.code || ''));
 }
 
 function showAuthError(msg){
@@ -474,11 +675,18 @@ function showAuthError(msg){
   el.style.display = msg ? 'block' : 'none';
 }
 
+// ⚠️ تحقق دفاعي: إذا فشلت تهيئة Firebase نفسها (سكربت لم يُحمَّل، أو مفتاح خاطئ تماماً)
+// نعرض رسالة واضحة بدل ما تبدو الأزرار وكأنها "لا تعمل" بصمت.
+if(firebaseInitError || typeof firebase === 'undefined'){
+  showAuthError('تعذر تحميل نظام تسجيل الدخول (Firebase). تأكد من اتصال الإنترنت وأعد تحميل الصفحة. التفاصيل: ' + (firebaseInitError ? firebaseInitError.message : 'firebase undefined'));
+}
+
 document.getElementById('btnAuthLogin').addEventListener('click', function(){
   showAuthError('');
+  if(!auth){ showAuthError('نظام تسجيل الدخول غير جاهز — أعد تحميل الصفحة وتأكد من اتصال الإنترنت.'); return; }
   const email = document.getElementById('authEmail').value.trim();
   const pass = document.getElementById('authPassword').value;
-  if(!email || !pass){ showAuthError('الرجاء إدخال البريد وكلمة المرور.'); return; }
+  if(!email || !pass){ showAuthError(tr('auth_err_fields_required')); return; }
   auth.signInWithEmailAndPassword(email, pass).catch(function(err){
     showAuthError(authErrorMessage(err));
   });
@@ -486,11 +694,12 @@ document.getElementById('btnAuthLogin').addEventListener('click', function(){
 
 document.getElementById('btnAuthSignup').addEventListener('click', function(){
   showAuthError('');
+  if(!auth){ showAuthError('نظام تسجيل الدخول غير جاهز — أعد تحميل الصفحة وتأكد من اتصال الإنترنت.'); return; }
   const name = document.getElementById('authName').value.trim();
   const email = document.getElementById('authEmail').value.trim();
   const pass = document.getElementById('authPassword').value;
-  if(!name){ showAuthError('الرجاء إدخال الاسم.'); return; }
-  if(!email || !pass){ showAuthError('الرجاء إدخال البريد وكلمة المرور.'); return; }
+  if(!name){ showAuthError(tr('auth_err_name_required')); return; }
+  if(!email || !pass){ showAuthError(tr('auth_err_fields_required')); return; }
   auth.createUserWithEmailAndPassword(email, pass).then(function(cred){
     return cred.user.updateProfile({ displayName: name });
   }).then(function(){
@@ -502,10 +711,11 @@ document.getElementById('btnAuthSignup').addEventListener('click', function(){
 
 document.getElementById('btnAuthReset').addEventListener('click', function(){
   showAuthError('');
+  if(!auth){ showAuthError('نظام تسجيل الدخول غير جاهز — أعد تحميل الصفحة وتأكد من اتصال الإنترنت.'); return; }
   const email = document.getElementById('authEmail').value.trim();
-  if(!email){ showAuthError('اكتب بريدك الإلكتروني أولاً ثم اضغط "نسيت كلمة المرور".'); return; }
+  if(!email){ showAuthError(tr('auth_err_email_first')); return; }
   auth.sendPasswordResetEmail(email).then(function(){
-    showAuthError('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك.');
+    showAuthError(tr('auth_reset_sent'));
   }).catch(function(err){
     showAuthError(authErrorMessage(err));
   });
@@ -518,19 +728,31 @@ function updateUserLabel(user){
   if(user) el.title = user.email;
 }
 
-auth.onAuthStateChanged(function(user){
-  if(user){
-    currentUid = user.uid;
-    updateUserLabel(user);
-    document.getElementById('authOverlay').style.display = 'none';
-    document.getElementById('appRoot').style.display = '';
-    loadTransactions();
-  } else {
-    currentUid = null;
-    updateUserLabel(null);
-    document.getElementById('authOverlay').style.display = 'flex';
-    document.getElementById('appRoot').style.display = 'none';
+if(auth){
+  auth.onAuthStateChanged(function(user){
+    if(user){
+      currentUid = user.uid;
+      updateUserLabel(user);
+      document.getElementById('authOverlay').style.display = 'none';
+      document.getElementById('appRoot').style.display = '';
+      loadTransactions();
+    } else {
+      currentUid = null;
+      updateUserLabel(null);
+      document.getElementById('authOverlay').style.display = 'flex';
+      document.getElementById('appRoot').style.display = 'none';
+    }
+  });
+}
+
+document.getElementById('btnLogout').addEventListener('click', function(){
+  if(confirm(tr('confirm_logout')) && auth){
+    auth.signOut();
   }
+});
+
+document.getElementById('btnLangAuth').addEventListener('click', function(){
+  setLang(lang === 'ar' ? 'en' : 'ar');
 });
 // ====== نهاية قسم تسجيل الدخول والتخزين ======
 
@@ -592,14 +814,14 @@ function initMap(){
     tileErrorCount++;
     if(tileErrorCount >= 4 && !switchedAlready){
       switchedAlready = true;
-      showMapWarning('تعذر تحميل صور القمر الصناعي (قد يكون بسبب الإنترنت أو حجب الموقع). تم التبديل لخريطة بديلة، أو افتح الملف من متصفح Chrome مباشرة بدل فتحه داخل واتساب/تيليجرام.');
+      showMapWarning(tr('err_tile_sat'));
       map.removeLayer(satellite);
       map.removeLayer(satelliteLabels);
       streetsBackup.addTo(map);
     }
   });
   streets.on('tileerror', function(){
-    showMapWarning('تعذر تحميل صور الخريطة العادية أيضاً — تحقق من اتصال الإنترنت، أو افتح الملف من متصفح Chrome مباشرة بدل فتحه داخل تطبيق آخر (واتساب/تيليجرام).');
+    showMapWarning(tr('err_tile_street'));
   });
 }
 
@@ -645,19 +867,19 @@ function bearingDegrees(lat1, lon1, lat2, lon2){
 }
 
 function bearingToArabicDir(brng){
-  const dirs = ['شمال', 'شمال شرق', 'شرق', 'جنوب شرق', 'جنوب', 'جنوب غرب', 'غرب', 'شمال غرب'];
-  return dirs[Math.round(brng / 45) % 8];
+  const keys = ['dir_n', 'dir_ne', 'dir_e', 'dir_se', 'dir_s', 'dir_sw', 'dir_w', 'dir_nw'];
+  return tr(keys[Math.round(brng / 45) % 8]);
 }
 
 function geoErrorMessage(err){
   if(err && err.code === 1){
-    return 'تم رفض إذن الوصول للموقع. فعّله من: إعدادات الجهاز ← الخصوصية/الموقع ← فعّل خدمة الموقع لهذا المتصفح، ثم أعد تحميل الصفحة وحاول مجدداً.';
+    return tr('err_geo_denied');
   } else if(err && err.code === 2){
-    return 'تعذر تحديد موقعك حالياً — تأكد من تفعيل خدمة الموقع (GPS) في الجهاز، وأنك في مكان مفتوح بعيد عن المباني.';
+    return tr('err_geo_unavailable');
   } else if(err && err.code === 3){
-    return 'استغرق تحديد الموقع وقتاً طويلاً — تأكد من تفعيل GPS وحاول مرة أخرى.';
+    return tr('err_geo_timeout');
   }
-  return 'تعذر تحديد موقعك.';
+  return tr('err_geo_generic');
 }
 
 function showError(msg){
@@ -711,7 +933,7 @@ function updateSelectionButtons(){
     selectBtn.style.display = 'none';
     delBtn.style.display = 'inline-block';
     cancelBtn.style.display = 'inline-block';
-    delBtn.textContent = '🗑️ حذف المحدد (' + selectedIds.size + ')';
+    delBtn.textContent = tr('btn_delete_selected') + ' (' + selectedIds.size + ')';
   } else {
     selectBtn.style.display = 'inline-block';
     delBtn.style.display = 'none';
@@ -734,7 +956,7 @@ function renderAll(fitView){
 
   if(transactions.length === 0){
     emptyEl.style.display = 'block';
-    emptyEl.textContent = 'لا توجد معاملات مضافة بعد';
+    emptyEl.textContent = tr('empty_default');
   } else {
     emptyEl.style.display = 'none';
   }
@@ -786,13 +1008,13 @@ function renderAll(fitView){
         '<b>' + escapeHtml(t.name) + '</b><br>' +
         'E: ' + t.easting + ' | N: ' + t.northing + '<br>' +
         '<span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:' + color + '; margin-left:4px;"></span>' + (STAGE_LABELS[stage] || STAGE_LABELS[1]) + '<br>' +
-        (t.done ? '✅ منتهية' : '⏳ قيد التنفيذ') + '<br>' +
+        (t.done ? tr('status_done') : tr('status_pending')) + '<br>' +
         '<div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">' +
-          '<a class="btn-small" style="background:#4285F4; color:#fff; text-decoration:none; display:inline-flex; align-items:center;" href="https://www.google.com/maps/dir/?api=1&destination=' + t.lat + ',' + t.lng + '&travelmode=driving" target="_blank" rel="noopener">🧭 الذهاب للموقع</a>' +
-          '<button class="btn-small ' + (t.done ? 'btn-undo' : 'btn-done') + '" data-toggle-id="' + t.id + '">' + (t.done ? '↩️ تراجع' : '✔️ إنهاء') + '</button>' +
-          '<button class="btn-small" style="background:#25D366; color:#fff;" data-share-id="' + t.id + '">📤 مشاركة الموقع</button>' +
-          '<button class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border);" data-notes-id="' + t.id + '">' + (t.notes ? '📝 تعديل' : '📝 ملاحظة') + '</button>' +
-          '<button class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border);" data-stage-id="' + t.id + '">✏️ المرحلة</button>' +
+          '<a class="btn-small" style="background:#4285F4; color:#fff; text-decoration:none; display:inline-flex; align-items:center;" href="https://www.google.com/maps/dir/?api=1&destination=' + t.lat + ',' + t.lng + '&travelmode=driving" target="_blank" rel="noopener">' + tr('btn_goto') + '</a>' +
+          '<button class="btn-small ' + (t.done ? 'btn-undo' : 'btn-done') + '" data-toggle-id="' + t.id + '">' + (t.done ? tr('btn_undo') : tr('btn_finish')) + '</button>' +
+          '<button class="btn-small" style="background:#25D366; color:#fff;" data-share-id="' + t.id + '">' + tr('btn_share') + '</button>' +
+          '<button class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border);" data-notes-id="' + t.id + '">' + (t.notes ? tr('btn_notes_edit') : tr('btn_notes_new')) + '</button>' +
+          '<button class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border);" data-stage-id="' + t.id + '">' + tr('btn_edit_stage') + '</button>' +
         '</div>'
       );
 
@@ -832,17 +1054,17 @@ function renderAll(fitView){
           '<div class="info">' +
             '<div class="name"><span class="stage-badge" style="background:' + pointColor(t) + '; color:' + pointInk(t) + ';">' + (t.stage || 1) + '</span><span class="status-dot ' + (t.done ? 'dot-done' : 'dot-pending') + '"></span>' + escapeHtml(t.name) + '</div>' +
             '<div class="coords">E: ' + t.easting + '&nbsp;&nbsp;N: ' + t.northing + '</div>' +
-            '<div class="coords">📅 ' + (t.createdAt || 'بدون تاريخ') + '</div>' +
-            (t.notes ? '<div style="font-size:12px; color:var(--text); margin-top:4px; direction:rtl;">📝 ' + escapeHtml(t.notes.length > 60 ? t.notes.slice(0, 60) + '…' : t.notes) + '</div>' : '') +
+            '<div class="coords">📅 ' + (t.createdAt || tr('no_date')) + '</div>' +
+            (t.notes ? '<div style="font-size:12px; color:var(--text); margin-top:4px; direction:' + (lang==='ar'?'rtl':'ltr') + ';">📝 ' + escapeHtml(t.notes.length > 60 ? t.notes.slice(0, 60) + '…' : t.notes) + '</div>' : '') +
           '</div>' +
         '</div>' +
         (selectMode ? '' :
         '<div class="actions">' +
-          '<a class="btn-small" style="background:#4285F4; color:#fff; text-decoration:none;" href="https://www.google.com/maps/dir/?api=1&destination=' + t.lat + ',' + t.lng + '&travelmode=driving" target="_blank" rel="noopener">🧭 الذهاب للموقع</a>' +
-          '<button class="btn-small ' + (t.done ? 'btn-undo' : 'btn-done') + '" data-action="toggle" data-id="' + t.id + '">' + (t.done ? '↩️ تراجع' : '✔️ إنهاء') + '</button>' +
+          '<a class="btn-small" style="background:#4285F4; color:#fff; text-decoration:none;" href="https://www.google.com/maps/dir/?api=1&destination=' + t.lat + ',' + t.lng + '&travelmode=driving" target="_blank" rel="noopener">' + tr('btn_goto') + '</a>' +
+          '<button class="btn-small ' + (t.done ? 'btn-undo' : 'btn-done') + '" data-action="toggle" data-id="' + t.id + '">' + (t.done ? tr('btn_undo') : tr('btn_finish')) + '</button>' +
           '<button class="btn-small" style="background:var(--accent); color:var(--accent-ink);" data-action="locate" data-id="' + t.id + '">🎯</button>' +
-          '<button class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border);" data-action="notes" data-id="' + t.id + '">' + (t.notes ? '📝 تعديل' : '📝 ملاحظة') + '</button>' +
-          '<button class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border);" data-action="editstage" data-id="' + t.id + '">✏️ المرحلة</button>' +
+          '<button class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border);" data-action="notes" data-id="' + t.id + '">' + (t.notes ? tr('btn_notes_edit') : tr('btn_notes_new')) + '</button>' +
+          '<button class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border);" data-action="editstage" data-id="' + t.id + '">' + tr('btn_edit_stage') + '</button>' +
           '<button class="btn-small btn-del" data-action="delete" data-id="' + t.id + '">🗑️</button>' +
         '</div>');
 
@@ -859,7 +1081,7 @@ function renderAll(fitView){
         const repStage = members[0].stage || 1;
         const header = document.createElement('div');
         header.className = 'group-header';
-        header.innerHTML = '<span>' + (isCollapsed ? '▶' : '▼') + '</span><span>📁 ارض رقم ' + key + ' — مرحلة رقم ' + repStage + ' — ' + presentItems.length + ' نقطة</span>';
+        header.innerHTML = '<span>' + (isCollapsed ? '▶' : '▼') + '</span><span>' + tr('group_land') + ' ' + key + ' — ' + tr('group_stage') + ' ' + repStage + ' — ' + presentItems.length + ' ' + tr('group_points') + '</span>';
         header.addEventListener('click', function(){
           if(expandedGroups.has(key)){ expandedGroups.delete(key); } else { expandedGroups.add(key); }
           renderAll(false);
@@ -893,14 +1115,14 @@ function renderAll(fitView){
   const doneCount = visible.filter(t=>t.done).length;
   const pendingCount = visible.length - doneCount;
 
-  document.getElementById('tabPending').textContent = '⏳ قيد التنفيذ (' + pendingCount + ')';
-  document.getElementById('tabDone').textContent = '✅ منتهية (' + doneCount + ')';
+  document.getElementById('tabPending').textContent = tr('tab_pending') + ' (' + pendingCount + ')';
+  document.getElementById('tabDone').textContent = tr('tab_done') + ' (' + doneCount + ')';
   document.getElementById('tabPending').classList.toggle('active', activeTab === 'pending');
   document.getElementById('tabDone').classList.toggle('active', activeTab === 'done');
 
   if(visible.length > 0 && itemsShown === 0){
     emptyEl.style.display = 'block';
-    emptyEl.textContent = activeTab === 'done' ? 'لا توجد معاملات منتهية بعد' : 'لا توجد معاملات قيد التنفيذ ضمن هذا التبويب';
+    emptyEl.textContent = activeTab === 'done' ? tr('empty_done') : tr('empty_tab');
   }
 }
 
@@ -912,14 +1134,14 @@ function escapeHtml(str){
 
 function buildTransaction(name, eVal, nVal, stageVal){
   // يرجع { error } أو { transaction }
-  if(!eVal && eVal !== 0 || !nVal && nVal !== 0){ return { error: 'الرجاء إدخال الإحداثي الشرقي والشمالي.' }; }
+  if(!eVal && eVal !== 0 || !nVal && nVal !== 0){ return { error: tr('err_coords_required') }; }
 
   const easting = parseFloat(eVal);
   const northing = parseFloat(nVal);
 
-  if(isNaN(easting) || isNaN(northing)){ return { error: 'الإحداثيات المدخلة غير صحيحة.' }; }
-  if(easting < 100000 || easting > 900000){ return { error: 'قيمة الإحداثي الشرقي (Easting) تبدو غير منطقية لمنطقة الشارقة: ' + easting }; }
-  if(northing < 2000000 || northing > 3500000){ return { error: 'قيمة الإحداثي الشمالي (Northing) تبدو غير منطقية لمنطقة الشارقة: ' + northing }; }
+  if(isNaN(easting) || isNaN(northing)){ return { error: tr('err_coords_invalid') }; }
+  if(easting < 100000 || easting > 900000){ return { error: tr('err_easting_range') + easting }; }
+  if(northing < 2000000 || northing > 3500000){ return { error: tr('err_northing_range') + northing }; }
 
   let stage = parseInt(stageVal, 10);
   if(isNaN(stage) || stage < 1 || stage > 5){ stage = 1; }
@@ -928,13 +1150,13 @@ function buildTransaction(name, eVal, nVal, stageVal){
   try{
     latlng = utmToLatLng(easting, northing);
   }catch(e){
-    return { error: 'تعذر تحويل الإحداثيات: ' + easting + ',' + northing };
+    return { error: tr('err_convert_failed') + easting + ',' + northing };
   }
 
   return {
     transaction: {
       id: Date.now().toString() + Math.random().toString(16).slice(2),
-      name: name && name.trim() ? name.trim() : ('معاملة ' + (transactions.length + 1)),
+      name: name && name.trim() ? name.trim() : (tr('auto_name_prefix') + ' ' + (transactions.length + 1)),
       easting: easting,
       northing: northing,
       lat: latlng.lat,
@@ -953,7 +1175,7 @@ async function addTransaction(){
   const nVal = document.getElementById('inpN').value.trim();
   const stageVal = document.getElementById('inpStage').value;
 
-  if(!name){ showError('الرجاء إدخال اسم أو رقم المعاملة.'); return; }
+  if(!name){ showError(tr('err_name_required')); return; }
 
   const result = buildTransaction(name, eVal, nVal, stageVal);
   if(result.error){ showError(result.error); return; }
@@ -976,7 +1198,7 @@ async function bulkAddTransactions(){
   const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
   if(lines.length === 0){
-    bulkErrEl.textContent = 'الرجاء لصق سطر واحد على الأقل بصيغة E,N';
+    bulkErrEl.textContent = tr('err_coords_required');
     bulkErrEl.style.display = 'block';
     return;
   }
@@ -995,16 +1217,16 @@ async function bulkAddTransactions(){
     } else if(parts.length >= 4){
       name = parts[0]; eVal = parts[1]; nVal = parts[2]; stageVal = parts[3];
     } else {
-      errors.push('السطر ' + (idx+1) + ': صيغة غير مفهومة ("' + line + '")');
+      errors.push(tr('bulk_line') + ' ' + (idx+1) + ': ' + tr('bulk_line_unclear') + ' ("' + line + '")');
       return;
     }
 
     const result = buildTransaction(name, eVal, nVal, stageVal);
     if(result.error){
-      errors.push('السطر ' + (idx+1) + ': ' + result.error);
+      errors.push(tr('bulk_line') + ' ' + (idx+1) + ': ' + result.error);
     } else {
       // لتفادي تكرار نفس الرقم في التسمية التلقائية أثناء نفس الدفعة
-      if(!name){ result.transaction.name = 'معاملة ' + (transactions.length + newOnes.length + 1); }
+      if(!name){ result.transaction.name = tr('auto_name_prefix') + ' ' + (transactions.length + newOnes.length + 1); }
       newOnes.push(result.transaction);
     }
   });
@@ -1017,7 +1239,7 @@ async function bulkAddTransactions(){
   }
 
   if(errors.length > 0){
-    bulkErrEl.innerHTML = 'تمت إضافة ' + newOnes.length + ' من ' + lines.length + '. الأخطاء:<br>' + errors.map(escapeHtml).join('<br>');
+    bulkErrEl.innerHTML = tr('bulk_added_summary') + ' ' + newOnes.length + ' ' + tr('bulk_of') + ' ' + lines.length + '. ' + tr('bulk_errors') + '<br>' + errors.map(escapeHtml).join('<br>');
     bulkErrEl.style.display = 'block';
   }
 }
@@ -1147,7 +1369,7 @@ document.getElementById('tabDone').addEventListener('click', function(){
 
 document.getElementById('btnMarkAllDone').addEventListener('click', async function(){
   if(transactions.length === 0) return;
-  if(!confirm('هل تريد تحديد جميع المعاملات (' + transactions.length + ') كمنتهية؟')) return;
+  if(!confirm(tn('confirm_mark_all', transactions.length))) return;
   transactions.forEach(function(t){ t.done = true; });
   await saveTransactions();
   renderAll(false);
@@ -1155,7 +1377,7 @@ document.getElementById('btnMarkAllDone').addEventListener('click', async functi
 
 document.getElementById('btnDeleteAll').addEventListener('click', async function(){
   if(transactions.length === 0) return;
-  if(!confirm('⚠️ هل أنت متأكد من حذف جميع المعاملات (' + transactions.length + ')؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
+  if(!confirm(tn('confirm_delete_all', transactions.length))) return;
   transactions = [];
   selectMode = false;
   selectedIds.clear();
@@ -1165,23 +1387,23 @@ document.getElementById('btnDeleteAll').addEventListener('click', async function
 
 document.getElementById('btnExportExcel').addEventListener('click', function(){
   if(transactions.length === 0){
-    showMapWarning('لا توجد معاملات لتصديرها.');
+    showMapWarning(tr('no_transactions_export'));
     return;
   }
   const rows = transactions.map(function(t){
     return {
-      'اسم المعاملة': t.name,
-      'المرحلة': t.stage || 1,
-      'التاريخ': t.createdAt || '',
-      'الإحداثي الشرقي (Easting)': t.easting,
-      'الإحداثي الشمالي (Northing)': t.northing,
-      'ملاحظات': t.notes || ''
+      [tr('xls_name')]: t.name,
+      [tr('xls_stage')]: t.stage || 1,
+      [tr('xls_date')]: t.createdAt || '',
+      [tr('xls_easting')]: t.easting,
+      [tr('xls_northing')]: t.northing,
+      [tr('xls_notes')]: t.notes || ''
     };
   });
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'المعاملات');
-  XLSX.writeFile(wb, 'معاملات_المساحة.xlsx');
+  XLSX.utils.book_append_sheet(wb, ws, tr('xls_sheet'));
+  XLSX.writeFile(wb, tr('xls_file'));
 });
 document.getElementById('btnSelectMode').addEventListener('click', function(){
   selectMode = true;
@@ -1248,15 +1470,15 @@ document.addEventListener('click', function(e){
 function shareLocation(t){
   const link = 'https://www.google.com/maps?q=' + t.lat + ',' + t.lng;
   if(navigator.share){
-    navigator.share({ title: t.name, text: 'موقع معاملة: ' + t.name, url: link }).catch(function(){});
+    navigator.share({ title: t.name, text: tr('share_loc_text') + t.name, url: link }).catch(function(){});
   } else if(navigator.clipboard){
     navigator.clipboard.writeText(link).then(function(){
-      alert('تم نسخ رابط الموقع، الصقه في أي تطبيق:\n' + link);
+      alert(tr('share_copied') + link);
     }).catch(function(){
-      prompt('انسخ رابط الموقع:', link);
+      prompt(tr('copy_link_prompt'), link);
     });
   } else {
-    prompt('انسخ رابط الموقع:', link);
+    prompt(tr('copy_link_prompt'), link);
   }
 }
 
@@ -1274,7 +1496,7 @@ document.getElementById('btnMyLocation').addEventListener('click', function(){
   }
 
   if(!navigator.geolocation){
-    showMapWarning('المتصفح لا يدعم تحديد الموقع.');
+    showMapWarning(tr('no_geo_support'));
     return;
   }
 
@@ -1306,11 +1528,11 @@ document.getElementById('btnMyLocation').addEventListener('click', function(){
 
 document.getElementById('btnNearest').addEventListener('click', function(){
   if(transactions.length === 0){
-    showMapWarning('لا توجد معاملات مضافة بعد.');
+    showMapWarning(tr('no_transactions_yet'));
     return;
   }
   if(!navigator.geolocation){
-    showMapWarning('المتصفح لا يدعم تحديد الموقع.');
+    showMapWarning(tr('no_geo_support'));
     return;
   }
 
@@ -1323,11 +1545,11 @@ document.getElementById('btnNearest').addEventListener('click', function(){
       if(d < minD){ minD = d; nearest = t; }
     });
     if(!nearest){
-      showMapWarning('لا توجد معاملات ضمن التصفية الحالية.');
+      showMapWarning(tr('no_transactions_filter'));
       return;
     }
     const dir = bearingToArabicDir(bearingDegrees(lat, lng, nearest.lat, nearest.lng));
-    const distText = minD >= 1000 ? (minD / 1000).toFixed(2) + ' كم' : Math.round(minD) + ' م';
+    const distText = minD >= 1000 ? (minD / 1000).toFixed(2) + ' ' + tr('km') : Math.round(minD) + ' ' + tr('unit_m');
     showNearestResult(nearest, distText, dir);
   }, function(err){
     showMapWarning(geoErrorMessage(err));
@@ -1346,7 +1568,7 @@ document.getElementById('btnResetNorth').addEventListener('click', function(){
 
 document.getElementById('btnZoomExtent').addEventListener('click', function(){
   if(transactions.length === 0){
-    showMapWarning('لا توجد معاملات مضافة بعد لعرضها.');
+    showMapWarning(tr('no_transactions_extent'));
     return;
   }
   const allBounds = transactions.map(function(t){ return [t.lat, t.lng]; });
@@ -1362,8 +1584,8 @@ function showNearestResult(t, distText, dir){
     document.getElementById('mapWrap').insertAdjacentElement('afterend', el);
   }
   el.innerHTML =
-    '<span>📏 أقرب معاملة: <b>' + escapeHtml(t.name) + '</b> — على بعد ' + distText + ' باتجاه ' + dir + '</span>' +
-    '<button class="btn-small" style="background:var(--accent); color:var(--accent-ink);" id="btnGoNearest">🎯 اذهب إليها</button>';
+    '<span>' + tr('nearest_result') + ' <b>' + escapeHtml(t.name) + '</b> — ' + tr('nearest_dist') + ' ' + distText + ' ' + tr('nearest_dir') + ' ' + dir + '</span>' +
+    '<button class="btn-small" style="background:var(--accent); color:var(--accent-ink);" id="btnGoNearest">' + tr('btn_go_there') + '</button>';
   document.getElementById('btnGoNearest').addEventListener('click', function(){
     map.setView([t.lat, t.lng], 18);
   });
@@ -1419,7 +1641,7 @@ function buildElevLayer(){
       renderer: canvasRenderer,
       radius: 4, fillColor: color, color: '#ffffff', weight: 0.6, fillOpacity: 0.9
     });
-    marker.bindPopup('📐 المنسوب: <b>' + elev + '</b> م');
+    marker.bindPopup(tr('elev_popup') + ' <b>' + elev + '</b> ' + tr('unit_m'));
     marker.addTo(elevLayer);
   });
 
@@ -1472,12 +1694,11 @@ document.getElementById('viewTabElevations').addEventListener('click', function(
   switchView('elevations');
 });
 
-document.getElementById('btnLogout').addEventListener('click', function(){
-  if(confirm('هل تريد تسجيل الخروج؟')){
-    auth.signOut();
-  }
+document.getElementById('btnLang').addEventListener('click', function(){
+  setLang(lang === 'ar' ? 'en' : 'ar');
 });
 
+setLang(lang);
 initMap();
 
 // مزامنة دورية: تتحقق كل بضع ثوانٍ من وجود تعديلات من جهاز آخر وتعرضها فوراً
