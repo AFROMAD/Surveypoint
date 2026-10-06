@@ -797,7 +797,11 @@ function initMap(){
 
   markersLayer = L.layerGroup().addTo(map);
   linesLayer = L.layerGroup().addTo(map);
-  elevLayer = L.layerGroup(); // لا تُضاف للخريطة إلا عند التبديل لتبويب المناسيب
+ elevLayer = L.markerClusterGroup({
+    chunkedLoading: true, 
+    maxClusterRadius: 40  
+});
+ // لا تُضاف للخريطة إلا عند التبديل لتبويب المناسيب
 
   map.on('zoomend', function(){
     if(transactions.length > 0){ renderAll(false); }
@@ -1618,11 +1622,23 @@ function elevGradientColor(t){
 let elevBuilt = false;
 let elevMinVal = 0, elevMaxVal = 0;
 
-function buildElevLayer(){
-  if(elevBuilt) return;
-  elevBuilt = true;
+async function buildElevLayer() {
+  if (elevBuilt) return;
+  document.getElementById('elevCount').textContent = "...";
 
-  if(!ELEVATION_DATA || ELEVATION_DATA.length === 0) return;
+  try {
+    // جلب البيانات من الملف الخارجي
+    const response = await fetch('sajaa_elevations.json');
+    if (!response.ok) throw new Error('Network response was not ok');
+    ELEVATION_DATA = await response.json();
+  } catch (error) {
+    showMapWarning("تعذر تحميل بيانات المناسيب الخارجية، تأكد من وجود الملف.");
+    console.error("Error loading elevations:", error);
+    return;
+  }
+
+  if (!ELEVATION_DATA || ELEVATION_DATA.length === 0) return;
+  elevBuilt = true;
 
   elevMinVal = Infinity;
   elevMaxVal = -Infinity;
@@ -1633,20 +1649,33 @@ function buildElevLayer(){
   const range = (elevMaxVal - elevMinVal) || 1;
 
   const canvasRenderer = L.canvas({ padding: 0.5 });
+  const markersToAdd = []; 
 
   ELEVATION_DATA.forEach(function(row){
     const elev = row[0], easting = row[1], northing = row[2];
     let latlng;
-    try{ latlng = utmToLatLng(easting, northing); }catch(e){ return; }
+    try { latlng = utmToLatLng(easting, northing); } catch(e) { return; }
     const t = (elev - elevMinVal) / range;
     const color = elevGradientColor(t);
+
     const marker = L.circleMarker([latlng.lat, latlng.lng], {
       renderer: canvasRenderer,
-      radius: 4, fillColor: color, color: '#ffffff', weight: 0.6, fillOpacity: 0.9
+      radius: 5, fillColor: color, color: '#ffffff', weight: 0.8, fillOpacity: 0.9
     });
     marker.bindPopup(tr('elev_popup') + ' <b>' + elev + '</b> ' + tr('unit_m'));
-    marker.addTo(elevLayer);
+    markersToAdd.push(marker); 
   });
+
+  // إضافة كل النقاط دفعة واحدة لتقليل الجهد على المتصفح
+  elevLayer.addLayers(markersToAdd);
+
+  document.getElementById('elevCount').textContent = ELEVATION_DATA.length.toLocaleString('en-US');
+  document.getElementById('elevMin').textContent = elevMinVal.toFixed(3) + ' م';
+  document.getElementById('elevMax').textContent = elevMaxVal.toFixed(3) + ' م';
+  document.getElementById('elevGradientBar').style.background =
+    'linear-gradient(90deg, rgb(59,130,246), rgb(45,212,191), rgb(240,180,41), rgb(239,68,68))';
+}
+
 
   document.getElementById('elevCount').textContent = ELEVATION_DATA.length.toLocaleString('en-US');
   document.getElementById('elevMin').textContent = elevMinVal.toFixed(3) + ' م';
