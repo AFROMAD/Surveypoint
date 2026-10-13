@@ -1745,14 +1745,21 @@ function renderElevationLayer(){
 
       const marker = L.circleMarker([lat, lng], {
         renderer: elevCanvasRenderer,
-        radius: 4,
+        // Larger tap target for phones and tablets.
+        radius: 8,
         fillColor: color,
         color: '#ffffff',
-        weight: 0.6,
-        fillOpacity: 0.9
+        weight: 1.2,
+        fillOpacity: 0.95,
+        interactive: true,
+        bubblingMouseEvents: false
       });
 
-      marker.bindPopup(tr('elev_popup') + ' <b>' + elev + '</b> ' + tr('unit_m'));
+      marker.bindPopup(tr('elev_popup') + ' <b>' + elev + '</b> ' + tr('unit_m'), {
+        closeButton: true,
+        autoPan: true,
+        maxWidth: 240
+      });
       elevLayer.addLayer(marker);
       visibleCount++;
     }
