@@ -1,4 +1,4 @@
-const CACHE_NAME = "sharjah-survey-pwa-v1";
+const CACHE_NAME = "sharjah-survey-pwa-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -27,7 +27,14 @@ self.addEventListener("fetch", event => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Keep Firebase and map tile requests network-first. The app itself is cached.
+  // Always fetch elevation JSON from the network. Never serve stale point data
+  // from the service-worker cache after the dataset has been updated.
+  if (url.origin === self.location.origin && url.pathname.toLowerCase().endsWith(".json")) {
+    event.respondWith(fetch(req, { cache: "no-store" }));
+    return;
+  }
+
+  // Keep Firebase and map tile requests network-first. The app shell is cached.
   if (
     url.hostname.includes("firebaseio.com") ||
     url.hostname.includes("arcgisonline.com") ||
@@ -40,7 +47,7 @@ self.addEventListener("fetch", event => {
 
   event.respondWith(
     caches.match(req).then(cached => cached || fetch(req).then(response => {
-      if (response && response.ok && url.origin === location.origin) {
+      if (response && response.ok && url.origin === self.location.origin) {
         const copy = response.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
       }
