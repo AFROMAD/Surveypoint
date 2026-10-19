@@ -357,8 +357,13 @@
       <span data-i18n="draw_layer">الطبقة</span><b id="drawPickLayer" style="font-size:13px;">—</b>
     </div>
     <div id="drawPickNote" style="font-size:12px; color:var(--muted); margin-top:8px;" data-i18n="draw_tap_hint">اضغط على الخريطة بعد فتح الرسم.</div>
+    <label style="display:flex; align-items:center; gap:8px; margin-top:10px; font-size:13px; cursor:pointer;">
+      <input type="checkbox" id="drawSnapOn" checked style="width:18px; height:18px; accent-color:var(--accent);">
+      <span data-i18n="draw_snap_toggle">📌 الالتقاط لأقرب نقطة في الرسم (أوقفه لأخذ إحداثي حر)</span>
+    </label>
     <div class="row" style="margin-top:10px;">
       <button class="btn-small" id="btnDrawCopy" data-i18n="btn_copy" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1; display:none;">📋 نسخ</button>
+      <button class="btn-small" id="btnDrawZoom" data-i18n="btn_zoom_pick" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;">🔍 تكبير للنقطة</button>
       <a class="btn-small" id="btnDrawNav" data-i18n="btn_goto" href="#" target="_blank" rel="noopener" style="background:#4285F4; color:#fff; text-decoration:none; flex:1; text-align:center; display:none;">🧭 الذهاب للموقع</a>
     </div>
   </div>
@@ -563,6 +568,10 @@ const TRANSLATIONS = {
   draw_none_loaded: { ar:'لا يوجد رسم مفتوح.', en:'No drawing is open.' },
   draw_auto_opened: { ar:'(فُتح آخر رسم محفوظ تلقائياً)', en:'(last saved drawing reopened automatically)' },
   draw_save_failed: { ar:'تم فتح الرسم لكن تعذر حفظه على الجهاز.', en:'Drawing opened but could not be saved on the device.' },
+  draw_snap_toggle: { ar:'📌 الالتقاط لأقرب نقطة في الرسم (أوقفه لأخذ إحداثي حر)', en:'📌 Snap to nearest drawing point (turn off for a free coordinate)' },
+  draw_snap_dist: { ar:'على بعد', en:'distance' },
+  btn_zoom_pick: { ar:'🔍 تكبير للنقطة', en:'🔍 Zoom to point' },
+  unit_cm: { ar:'سم', en:'cm' },
   copy_link_prompt: { ar:'انسخ رابط الموقع:', en:'Copy the location link:' },
   xls_name: { ar:'اسم المعاملة', en:'Transaction Name' },
   xls_stage: { ar:'المرحلة', en:'Stage' },
@@ -839,25 +848,25 @@ document.getElementById('btnLangAuth').addEventListener('click', function(){
 
 function initMap(){
   document.getElementById('map').innerHTML = ''; // إزالة نص التحميل قبل تهيئة الخريطة
-  map = L.map('map', { zoomControl: true, rotate: true, rotateControl: false, touchRotate: true }).setView([25.35, 55.4], 11); // مركز تقريبي على الشارقة
+  map = L.map('map', { zoomControl: true, rotate: true, rotateControl: false, touchRotate: true, maxZoom: 25, zoomSnap: 0.5, zoomDelta: 1, wheelPxPerZoomLevel: 80 }).setView([25.35, 55.4], 11); // مركز تقريبي على الشارقة
 
   const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 19,
+    maxZoom: 25, maxNativeZoom: 19,
     attribution: 'Esri, Maxar, Earthstar Geographics'
   });
 
   const satelliteLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 19,
+    maxZoom: 25, maxNativeZoom: 19,
     attribution: 'Esri'
   });
 
   const streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
+    maxZoom: 25, maxNativeZoom: 19,
     attribution: '&copy; OpenStreetMap'
   });
 
   const streetsBackup = L.tileLayer('https://tile.openstreetmap.de/{z}/{x}/{y}.png', {
-    maxZoom: 19,
+    maxZoom: 25, maxNativeZoom: 19,
     attribution: '&copy; OpenStreetMap'
   });
 
@@ -2127,11 +2136,6 @@ async function refreshSavedList(){
 
 // ---- الرسم على الخريطة ----
 async function showDrawing(parsed, name, save){
-  drawLayer.clearLayers(); drawTextLayer.clearLayers();
-  drawTexts = []; drawEnts = null; drawSnap = null; drawBounds = null;
-  if(drawPickMarker){ map.removeLayer(drawPickMarker); drawPickMarker = null; }
-  map.closePopup();
-
   const ents = parsed.ents;
   let tot = 0, ok = 0, sample = null;
   for(let i = 0; i < ents.length; i++){
@@ -2144,8 +2148,14 @@ async function showDrawing(parsed, name, save){
   if(tot === 0 || ok / tot < 0.5){
     const s = sample ? (sample[0].toFixed(2) + ', ' + sample[1].toFixed(2)) : '-';
     setDrawStatus(tr('draw_err_range').replace('%s', s), true);
-    return false;
+    return false; // الرسم المعروض حالياً يبقى كما هو
   }
+
+  // بعد التأكد أن الرسم صالح فقط نمسح الرسم السابق
+  drawLayer.clearLayers(); drawTextLayer.clearLayers();
+  drawTexts = []; drawEnts = null; drawSnap = null; drawBounds = null;
+  if(drawPickMarker){ map.removeLayer(drawPickMarker); drawPickMarker = null; }
+  map.closePopup();
 
   let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
   function ll(x, y){
@@ -2282,12 +2292,13 @@ function onMapClickDraw(ev){
   let en;
   try{ en = proj4('EPSG:4326', 'EPSG:32640', [p.lng, p.lat]); }catch(e){ return; }
   const mpp = 156543.03392 * Math.cos(p.lat * Math.PI / 180) / Math.pow(2, map.getZoom());
-  const tol = Math.max(0.3, 22 * mpp);
-  const snap = nearestSnap(drawSnap, en[0], en[1], tol);
+  const tol = Math.max(0.01, 22 * mpp);
+  const snapOn = !document.getElementById('drawSnapOn') || document.getElementById('drawSnapOn').checked !== false;
+  const snap = snapOn ? nearestSnap(drawSnap, en[0], en[1], tol) : null;
   let res;
   if(snap){
     const e = drawEnts[snap.ei];
-    res = { E: snap.x, N: snap.y, Z: (Math.abs(snap.z) > 1e-9 ? snap.z : null), snapped: true, layer: e.ly || '', text: (e.k === 't' || e.k === 'i') ? e.s : '' };
+    res = { E: snap.x, N: snap.y, Z: (Math.abs(snap.z) > 1e-9 ? snap.z : null), snapped: true, dist: snap.d, layer: e.ly || '', text: (e.k === 't' || e.k === 'i') ? e.s : '' };
   } else {
     res = { E: en[0], N: en[1], Z: null, snapped: false, layer: '', text: '' };
   }
@@ -2306,7 +2317,7 @@ function showPick(res){
   document.getElementById('drawPickN').textContent = fmt3(res.N);
   document.getElementById('drawPickZ').textContent = zTxt;
   document.getElementById('drawPickLayer').textContent = layerTxt;
-  document.getElementById('drawPickNote').textContent = res.snapped ? tr('draw_snapped') : tr('draw_free');
+  document.getElementById('drawPickNote').textContent = res.snapped ? (tr('draw_snapped') + ' — ' + tr('draw_snap_dist') + ' ' + (res.dist < 1 ? (res.dist * 100).toFixed(1) + ' ' + tr('unit_cm') : res.dist.toFixed(2) + ' ' + tr('unit_m'))) : tr('draw_free');
   document.getElementById('btnDrawCopy').style.display = '';
   const nav = document.getElementById('btnDrawNav');
   nav.style.display = '';
@@ -2315,8 +2326,15 @@ function showPick(res){
   const html = '<div style="direction:ltr; text-align:left; font-family:\'JetBrains Mono\',monospace; font-size:13px; line-height:1.7;">' +
     '<b>E</b> ' + fmt3(res.E) + '<br><b>N</b> ' + fmt3(res.N) + (res.Z === null ? '' : '<br><b>Z</b> ' + fmt3(res.Z)) + '</div>' +
     (res.layer ? '<div style="font-size:12px; color:#666; margin-top:4px;">' + escapeHtml(layerTxt) + '</div>' : '') +
-    '<button class="btn-small" style="margin-top:8px; background:var(--accent); color:var(--accent-ink);" data-copy-pick="1">' + tr('btn_copy') + '</button>';
+    '<div style="display:flex; gap:6px; margin-top:8px;"><button class="btn-small" style="background:var(--accent); color:var(--accent-ink);" data-copy-pick="1">' + tr('btn_copy') + '</button>' +
+    '<button class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border);" data-zoom-pick="1">' + tr('btn_zoom_pick') + '</button></div>';
   L.popup({ closeButton: true }).setLatLng([q.lat, q.lng]).setContent(html).openOn(map);
+}
+
+function zoomToLastPick(){
+  if(!drawLastPick) return;
+  const q = utmToLatLng(drawLastPick.E, drawLastPick.N);
+  map.setView([q.lat, q.lng], 23);
 }
 
 function copyLastPick(btn){
@@ -2338,7 +2356,9 @@ document.getElementById('btnDrawCopy').addEventListener('click', function(){ cop
 document.addEventListener('click', function(e){
   const b = e.target.closest('[data-copy-pick]');
   if(b) copyLastPick(b);
+  if(e.target.closest('[data-zoom-pick]')) zoomToLastPick();
 });
+document.getElementById('btnDrawZoom').addEventListener('click', zoomToLastPick);
 document.getElementById('drawSavedList').addEventListener('click', async function(e){
   const o = e.target.closest('[data-draw-open]');
   const d = e.target.closest('[data-draw-del]');
