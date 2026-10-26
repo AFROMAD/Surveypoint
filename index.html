@@ -274,6 +274,7 @@
     </div>
     <button class="btn-primary" id="btnAdd" data-i18n="btn_add">إضافة على الخريطة</button>
     <div id="err"></div>
+    <p style="font-size:12px; color:var(--muted); margin:10px 0 0; line-height:1.7;" data-i18n="lp_hint">💡 أو اضغط مطولاً على الخريطة في المكان المطلوب لإضافة نقطة يدوياً.</p>
   </div>
 
   <div class="card">
@@ -371,6 +372,28 @@
   <div class="card">
     <h3 data-i18n="draw_saved">💾 الرسومات المحفوظة على هذا الجهاز</h3>
     <div id="drawSavedList"></div>
+  </div>
+</div>
+
+<div id="longPressModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <h3 style="margin:0 0 6px; font-size:15px; color:var(--accent);" data-i18n="lp_title">📍 إضافة نقطة هنا</h3>
+    <div id="lpCoords" class="mono" style="font-size:12.5px; color:var(--muted); margin-bottom:10px;"></div>
+    <label data-i18n="name_label">اسم / رقم المعاملة</label>
+    <input id="lpName" type="text" data-i18n-ph="lp_name_ph" placeholder="اسم النقطة (اختياري)" style="margin-bottom:10px;">
+    <label data-i18n="stage_label">مرحلة المعاملة</label>
+    <select id="lpStage">
+      <option value="1" data-i18n="stage_opt_1">1️⃣ المرحلة الأولى</option>
+      <option value="2" data-i18n="stage_opt_2">2️⃣ المرحلة الثانية</option>
+      <option value="3" data-i18n="stage_opt_3">3️⃣ المرحلة الثالثة</option>
+      <option value="4" data-i18n="stage_opt_4">4️⃣ المرحلة الرابعة</option>
+      <option value="5" data-i18n="stage_opt_5">5️⃣ المرحلة الخامسة</option>
+    </select>
+    <div id="lpErr" style="color:var(--danger); font-size:12px; margin-top:8px; display:none;"></div>
+    <div class="row" style="margin-top:12px;">
+      <button id="btnLpAdd" class="btn-small" style="background:var(--accent); color:var(--accent-ink); flex:1;" data-i18n="btn_add_point">➕ إضافة النقطة</button>
+      <button id="btnLpCancel" class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;" data-i18n="btn_cancel">إلغاء</button>
+    </div>
   </div>
 </div>
 
@@ -572,6 +595,11 @@ const TRANSLATIONS = {
   draw_snap_dist: { ar:'على بعد', en:'distance' },
   btn_zoom_pick: { ar:'🔍 تكبير للنقطة', en:'🔍 Zoom to point' },
   unit_cm: { ar:'سم', en:'cm' },
+  lp_title: { ar:'📍 إضافة نقطة هنا', en:'📍 Add a point here' },
+  lp_name_ph: { ar:'اسم النقطة (اختياري)', en:'Point name (optional)' },
+  btn_add_point: { ar:'➕ إضافة النقطة', en:'➕ Add point' },
+  lp_hint: { ar:'💡 أو اضغط مطولاً على الخريطة في المكان المطلوب لإضافة نقطة يدوياً.', en:'💡 Or long-press the map at the desired spot to add a point manually.' },
+  lp_out_of_range: { ar:'هذا المكان خارج نطاق UTM Zone 40N للشارقة — لا يمكن إضافة نقطة هنا.', en:'This spot is outside the Sharjah UTM Zone 40N range — cannot add a point here.' },
   copy_link_prompt: { ar:'انسخ رابط الموقع:', en:'Copy the location link:' },
   xls_name: { ar:'اسم المعاملة', en:'Transaction Name' },
   xls_stage: { ar:'المرحلة', en:'Stage' },
@@ -889,6 +917,7 @@ function initMap(){
   drawTextLayer = L.layerGroup();
   drawRenderer = L.canvas({ padding: 0.5 });
   map.on('click', onMapClickDraw);
+  setupLongPress();
   map.on('moveend', refreshDrawTexts);
 
   map.on('zoomend', function(){
@@ -2370,6 +2399,95 @@ document.getElementById('drawSavedList').addEventListener('click', async functio
     refreshSavedList();
   }
 });
+
+// ====== إضافة نقطة بالضغط المطوّل على الخريطة ======
+let lpPoint = null, lpMarker = null, lpLastAt = 0, lpOpenedAt = 0, lpStageLast = '1';
+
+function openLongPressModal(latlng){
+  if(currentView !== 'transactions') return;
+  const root = document.getElementById('appRoot');
+  if(root && root.style.display === 'none') return;
+  const now = Date.now();
+  if(now - lpLastAt < 1500) return; // منع التكرار (حدث contextmenu + المؤقّت)
+  let en;
+  try{ en = proj4('EPSG:4326', 'EPSG:32640', [latlng.lng, latlng.lat]); }catch(e){ return; }
+  const E = Math.round(en[0] * 1000) / 1000, N = Math.round(en[1] * 1000) / 1000;
+  lpLastAt = now;
+  if(!inUtmRange(E, N)){ showMapWarning(tr('lp_out_of_range')); return; }
+
+  lpPoint = { E: E, N: N, lat: latlng.lat, lng: latlng.lng };
+  lpOpenedAt = now;
+  if(lpMarker){ map.removeLayer(lpMarker); }
+  lpMarker = L.circleMarker([latlng.lat, latlng.lng], { radius: 11, color: '#ffffff', weight: 2, fillColor: '#f59e0b', fillOpacity: 0.5 }).addTo(map);
+  document.getElementById('lpCoords').textContent = 'E ' + E.toFixed(3) + '   N ' + N.toFixed(3);
+  document.getElementById('lpName').value = '';
+  document.getElementById('lpStage').value = lpStageLast;
+  const err = document.getElementById('lpErr'); err.style.display = 'none'; err.textContent = '';
+  document.getElementById('longPressModal').style.display = 'flex';
+  setTimeout(function(){ try{ document.getElementById('lpName').focus(); }catch(e){} }, 700);
+}
+
+function closeLongPressModal(){
+  document.getElementById('longPressModal').style.display = 'none';
+  if(lpMarker){ map.removeLayer(lpMarker); lpMarker = null; }
+  lpPoint = null;
+}
+
+async function addLongPressPoint(){
+  if(!lpPoint) return;
+  if(Date.now() - lpOpenedAt < 600) return; // تجاهل نقرة "شبحية" ناتجة عن رفع الإصبع بعد الضغط المطوّل
+  const name = document.getElementById('lpName').value.trim();
+  const stage = document.getElementById('lpStage').value;
+  const res = buildTransaction(name, lpPoint.E, lpPoint.N, stage);
+  if(res.error){
+    const err = document.getElementById('lpErr');
+    err.textContent = res.error; err.style.display = 'block';
+    return;
+  }
+  lpStageLast = stage;
+  transactions.push(res.transaction);
+  closeLongPressModal();
+  await saveTransactions();
+  renderAll(false);
+}
+
+function setupLongPress(){
+  const cont = map.getContainer();
+  let timer = null, sx = 0, sy = 0, pointers = 0;
+  function cancel(){ if(timer){ clearTimeout(timer); timer = null; } }
+  cont.addEventListener('pointerdown', function(ev){
+    pointers++;
+    if(ev.pointerType === 'mouse') return; // الفأرة: زر الماوس الأيمن (contextmenu)
+    if(pointers > 1){ cancel(); return; }  // قرص بإصبعين = تكبير وليس ضغطاً مطوّلاً
+    if(ev.target && ev.target.closest && ev.target.closest('.leaflet-marker-icon, .leaflet-popup, .leaflet-control')) return;
+    sx = ev.clientX; sy = ev.clientY;
+    cancel();
+    timer = setTimeout(function(){
+      timer = null;
+      let ll;
+      try{ ll = map.mouseEventToLatLng({ clientX: sx, clientY: sy }); }catch(e){ return; }
+      openLongPressModal(ll);
+    }, 650);
+  }, true);
+  cont.addEventListener('pointermove', function(ev){
+    if(timer && Math.hypot(ev.clientX - sx, ev.clientY - sy) > 10) cancel();
+  }, true);
+  ['pointerup', 'pointercancel'].forEach(function(t){
+    cont.addEventListener(t, function(){ pointers = Math.max(0, pointers - 1); cancel(); }, true);
+  });
+  map.on('movestart zoomstart', cancel);
+  map.on('contextmenu', function(e){ openLongPressModal(e.latlng); });
+}
+
+document.getElementById('btnLpAdd').addEventListener('click', addLongPressPoint);
+document.getElementById('btnLpCancel').addEventListener('click', function(){
+  if(Date.now() - lpOpenedAt < 600) return;
+  closeLongPressModal();
+});
+document.getElementById('lpName').addEventListener('keydown', function(e){
+  if(e.key === 'Enter'){ addLongPressPoint(); }
+});
+// ====== نهاية الضغط المطوّل ======
 
 function renderDrawingTab(){
   const wrap = document.getElementById('viewTabs');
