@@ -839,6 +839,12 @@ document.getElementById('btnAuthReset').addEventListener('click', function(){
   });
 });
 
+function fixMapSize(){
+  if(typeof map !== 'undefined' && map){ try{ map.invalidateSize(); }catch(e){} }
+}
+window.addEventListener('resize', fixMapSize);
+window.addEventListener('orientationchange', function(){ setTimeout(fixMapSize, 300); });
+
 function updateUserLabel(user){
   const el = document.getElementById('currentUserLabel');
   if(!el) return;
@@ -853,7 +859,10 @@ if(auth){
       updateUserLabel(user);
       document.getElementById('authOverlay').style.display = 'none';
       document.getElementById('appRoot').style.display = '';
+      fixMapSize(); // الخريطة أُنشئت والصفحة مخفية (قبل الدخول) فحجمها صفر — نعيد قياسها الآن
       loadTransactions();
+      setTimeout(fixMapSize, 150);
+      setTimeout(fixMapSize, 600);
     } else {
       currentUid = null;
       updateUserLabel(null);
