@@ -600,6 +600,8 @@ const TRANSLATIONS = {
   btn_add_point: { ar:'➕ إضافة النقطة', en:'➕ Add point' },
   lp_hint: { ar:'💡 أو اضغط مطولاً على الخريطة في المكان المطلوب لإضافة نقطة يدوياً.', en:'💡 Or long-press the map at the desired spot to add a point manually.' },
   lp_out_of_range: { ar:'هذا المكان خارج نطاق UTM Zone 40N للشارقة — لا يمكن إضافة نقطة هنا.', en:'This spot is outside the Sharjah UTM Zone 40N range — cannot add a point here.' },
+  btn_delete_point: { ar:'🗑️ حذف', en:'🗑️ Delete' },
+  confirm_delete_point: { ar:'حذف النقطة "%name%"؟', en:'Delete the point "%name%"?' },
   copy_link_prompt: { ar:'انسخ رابط الموقع:', en:'Copy the location link:' },
   xls_name: { ar:'اسم المعاملة', en:'Transaction Name' },
   xls_stage: { ar:'المرحلة', en:'Stage' },
@@ -1148,6 +1150,7 @@ function renderAll(fitView){
           '<button class="btn-small" style="background:#25D366; color:#fff;" data-share-id="' + t.id + '">' + tr('btn_share') + '</button>' +
           '<button class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border);" data-notes-id="' + t.id + '">' + (t.notes ? tr('btn_notes_edit') : tr('btn_notes_new')) + '</button>' +
           '<button class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border);" data-stage-id="' + t.id + '">' + tr('btn_edit_stage') + '</button>' +
+          '<button class="btn-small btn-del" data-delete-id="' + t.id + '">' + tr('btn_delete_point') + '</button>' +
         '</div>'
       );
 
@@ -1245,8 +1248,11 @@ function renderAll(fitView){
     map.fitBounds(bounds, { padding: [30,30], maxZoom: 16 });
   }
 
-  const doneCount = visible.filter(t=>t.done).length;
-  const pendingCount = visible.length - doneCount;
+  // العدد بالأراضي: كل النقاط التي تحمل نفس الرقم الأول في الاسم = أرض/معاملة واحدة
+  const doneLands = new Set(), pendingLands = new Set();
+  visible.forEach(function(x){ (x.done ? doneLands : pendingLands).add(groupKeyOf(x)); });
+  const doneCount = doneLands.size;
+  const pendingCount = pendingLands.size;
 
   document.getElementById('tabPending').textContent = tr('tab_pending') + ' (' + pendingCount + ')';
   document.getElementById('tabDone').textContent = tr('tab_done') + ' (' + doneCount + ')';
@@ -1569,6 +1575,19 @@ document.addEventListener('click', async function(e){
   await saveTransactions();
   renderAll(false);
   if(map){ map.closePopup(); }
+});
+
+document.addEventListener('click', async function(e){
+  const delBtn = e.target.closest('[data-delete-id]');
+  if(!delBtn) return;
+  const id = delBtn.getAttribute('data-delete-id');
+  const t = transactions.find(x => x.id === id);
+  if(!t) return;
+  if(!confirm(tr('confirm_delete_point').replace('%name%', t.name))) return;
+  transactions = transactions.filter(x => x.id !== id);
+  if(map){ map.closePopup(); }
+  await saveTransactions();
+  renderAll(false);
 });
 
 document.addEventListener('click', function(e){
