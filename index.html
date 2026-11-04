@@ -495,7 +495,7 @@ const TRANSLATIONS = {
   elev_max_label: { ar:'أعلى منسوب:', en:'Max elevation:' },
   elev_low: { ar:'الأقل', en:'Low' },
   elev_high: { ar:'الأعلى', en:'High' },
-  elev_hint: { ar:'اضغط على أي نقطة على الخريطة لعرض قيمة المنسوب الخاصة بها.', en:'Tap any point on the map to see its elevation value.' },
+  elev_hint: { ar:'اضغط بالقرب من أي نقطة على الخريطة لعرض منسوبها — يُلتقط أقرب نقطة لإصبعك تلقائياً، وكلما قرّبت الخريطة صار الاختيار أدق.', en:'Tap near any point on the map to see its elevation — the point nearest your finger is picked automatically; zoom in for finer selection.' },
   notes_title: { ar:'📝 ملاحظات المعاملة', en:'📝 Transaction notes' },
   notes_ph: { ar:'اكتب ملاحظاتك هنا...', en:'Write your notes here...' },
   btn_save: { ar:'💾 حفظ', en:'💾 Save' },
@@ -928,6 +928,8 @@ function initMap(){
   drawTextLayer = L.layerGroup();
   drawRenderer = L.canvas({ padding: 0.5 });
   map.on('click', onMapClickDraw);
+  map.on('click', onMapClickElev);
+  map.on('popupclose', function(){ if(elevPickMarker){ map.removeLayer(elevPickMarker); elevPickMarker = null; } });
   setupLongPress();
   map.on('moveend', refreshDrawTexts);
 
@@ -1772,6 +1774,7 @@ function elevGradientColor(t){
   return 'rgb(239,68,68)';
 }
 
+let elevSnap = null, elevPickMarker = null; // فهرس أقرب نقطة منسوب لسهولة الضغط بالإصبع
 const builtElevAreas = {}; // كاش: key -> {min, max} بعد أول بناء لكل منطقة
 let currentElevKey = null;
 
@@ -1795,6 +1798,8 @@ async function ensureAreaData(area){
 
 async function buildElevLayer(area){
   elevLayer.clearLayers();
+  elevSnap = null;
+  if(elevPickMarker){ map.removeLayer(elevPickMarker); elevPickMarker = null; }
   if(!area) return;
 
   document.getElementById('elevAreaTitle').textContent = (lang === 'ar' ? area.labelAr : area.labelEn);
@@ -1822,14 +1827,14 @@ async function buildElevLayer(area){
     try{ latlng = utmToLatLng(easting, northing); }catch(e){ return; }
     const tcol = (elev - minV) / range;
     const color = elevGradientColor(tcol);
-    const marker = L.circleMarker([latlng.lat, latlng.lng], {
-      renderer: canvasRenderer,
-      radius: 4, fillColor: color, color: '#ffffff', weight: 0.6, fillOpacity: 0.9
-    });
-    marker.bindPopup(tr('elev_popup') + ' <b>' + elev + '</b> ' + tr('unit_m'));
-    marker.addTo(elevLayer);
+    L.circleMarker([latlng.lat, latlng.lng], {
+      renderer: canvasRenderer, interactive: false,
+      radius: 5, fillColor: color, color: '#ffffff', weight: 0.8, fillOpacity: 0.92
+    }).addTo(elevLayer);
   });
 
+  // فهرس مكاني: الضغط على الخريطة يلتقط أقرب نقطة منسوب لإصبعك (بدل الحاجة لإصابة نقطة صغيرة بالضبط)
+  elevSnap = buildSnapIndex(data.map(function(r){ return { k: 'p', x: r[1], y: r[2], z: r[0] }; }), 20);
   builtElevAreas[area.key] = { min: minV, max: maxV };
   document.getElementById('elevCount').textContent = data.length.toLocaleString('en-US');
   document.getElementById('elevMin').textContent = minV.toFixed(3) + ' ' + tr('unit_m');
@@ -1840,6 +1845,24 @@ async function buildElevLayer(area){
   if(elevLayer.getLayers().length > 0 && currentElevKey === area.key){
     map.fitBounds(elevLayer.getBounds(), { padding: [30, 30] });
   }
+}
+
+function onMapClickElev(ev){
+  if(!currentElevKey || !elevSnap) return;
+  const p = ev.latlng;
+  let en;
+  try{ en = proj4('EPSG:4326', 'EPSG:32640', [p.lng, p.lat]); }catch(e){ return; }
+  const mpp = 156543.03392 * Math.cos(p.lat * Math.PI / 180) / Math.pow(2, map.getZoom());
+  const tol = Math.max(0.3, 34 * mpp); // ~34 بكسل ≈ حجم الإصبع
+  const s = nearestSnap(elevSnap, en[0], en[1], tol);
+  if(!s) return;
+  const q = utmToLatLng(s.x, s.y);
+  if(elevPickMarker){ map.removeLayer(elevPickMarker); }
+  elevPickMarker = L.circleMarker([q.lat, q.lng], { radius: 12, color: '#ffffff', weight: 3, fillColor: '#000000', fillOpacity: 0.15, interactive: false }).addTo(map);
+  L.popup({ closeButton: true, offset: [0, -4] })
+    .setLatLng([q.lat, q.lng])
+    .setContent('<div style="font-size:16px; font-weight:700;">' + tr('elev_popup') + ' <b>' + s.z + '</b> ' + tr('unit_m') + '</div>')
+    .openOn(map);
 }
 
 function renderElevTabs(){
@@ -1889,6 +1912,7 @@ async function switchView(view){
   map.removeLayer(elevLayer);
   if(drawLayer){ map.removeLayer(drawLayer); map.removeLayer(drawTextLayer); }
   if(drawPickMarker){ map.removeLayer(drawPickMarker); drawPickMarker = null; }
+  if(elevPickMarker){ map.removeLayer(elevPickMarker); elevPickMarker = null; }
   map.closePopup();
   if(btnNearestEl) btnNearestEl.style.display = (view === 'transactions') ? 'flex' : 'none';
 
