@@ -189,6 +189,7 @@
   .draw-text{ color:#fff; font:700 11px 'JetBrains Mono', monospace; text-shadow:0 0 3px #000, 0 0 3px #000, 0 0 2px #000; white-space:nowrap; pointer-events:none; }
   .pick-grid{ display:grid; grid-template-columns:auto 1fr; gap:8px 14px; font-size:14px; align-items:center; }
   .pick-grid span{ color:var(--muted); font-size:12.5px; }
+  .sv-marker{ display:inline-block; transform:translate(-50%,-50%); background:#0ea5e9; color:#fff; border:2px solid #fff; border-radius:12px; padding:2px 8px; font:700 12px 'JetBrains Mono', monospace; box-shadow:0 1px 5px rgba(0,0,0,.55); white-space:nowrap; }
 </style>
 </head>
 <body>
@@ -393,6 +394,39 @@
     <div class="row" style="margin-top:12px;">
       <button id="btnLpAdd" class="btn-small" style="background:var(--accent); color:var(--accent-ink); flex:1;" data-i18n="btn_add_point">➕ إضافة النقطة</button>
       <button id="btnLpCancel" class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;" data-i18n="btn_cancel">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="surveyView" style="display:none;">
+  <div class="card">
+    <h3 data-i18n="sn_title">📝 ملاحظات المسح</h3>
+    <p style="font-size:13px; color:var(--muted); line-height:1.8; margin:0 0 10px;" data-i18n="sn_hint">اضغط مطولاً على أي مكان في الخريطة لتسجيل ملاحظة مسح بإحداثياته ورقم الأرض والمنسوب. تُحفظ دائماً في حسابك وتقدر ترجع لها وقت الحاجة.</p>
+    <div style="font-size:13px; color:var(--muted);"><span data-i18n="sn_count">عدد الملاحظات:</span> <b id="svCount" class="mono" style="color:var(--text);">0</b></div>
+    <button class="btn-small" id="btnSvExport" data-i18n="btn_export_survey" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); width:100%; margin-top:10px;">📊 تصدير ملاحظات المسح إلى Excel</button>
+  </div>
+  <div class="card">
+    <div id="svList"></div>
+  </div>
+</div>
+
+<div id="surveyModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <h3 id="svTitle" style="margin:0 0 6px; font-size:15px; color:var(--accent);">📝 ملاحظة مسح جديدة</h3>
+    <div id="svCoords" class="mono" style="font-size:12.5px; color:var(--muted); margin-bottom:10px;"></div>
+    <label data-i18n="sn_land">رقم الأرض</label>
+    <input id="svLand" type="text" data-i18n-ph="sn_land_ph" placeholder="مثال: 12">
+    <div id="svSugLand" style="font-size:11.5px; color:var(--muted); margin:4px 0 8px; display:none;"></div>
+    <label data-i18n="sn_elev" style="margin-top:6px;">المنسوب (م)</label>
+    <input id="svElev" type="number" step="any" data-i18n-ph="sn_elev_ph" placeholder="مثال: 55.07">
+    <div id="svSugElev" style="font-size:11.5px; color:var(--muted); margin:4px 0 8px; display:none;"></div>
+    <label data-i18n="sn_note" style="margin-top:6px;">الملاحظات</label>
+    <textarea id="svNote" rows="4" data-i18n-ph="notes_ph" placeholder="اكتب ملاحظاتك هنا..." style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:14px; resize:vertical;"></textarea>
+    <div id="svErr" style="color:var(--danger); font-size:12px; margin-top:8px; display:none;"></div>
+    <div class="row" style="margin-top:12px;">
+      <button id="btnSvSave" class="btn-small" style="background:var(--accent); color:var(--accent-ink); flex:1;" data-i18n="btn_save">💾 حفظ</button>
+      <button id="btnSvCancel" class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); flex:1;" data-i18n="btn_cancel">إلغاء</button>
+      <button id="btnSvDelete" class="btn-small btn-del" style="flex:0 0 auto; display:none;" data-i18n="btn_delete_point">🗑️ حذف</button>
     </div>
   </div>
 </div>
@@ -602,6 +636,28 @@ const TRANSLATIONS = {
   lp_out_of_range: { ar:'هذا المكان خارج نطاق UTM Zone 40N للشارقة — لا يمكن إضافة نقطة هنا.', en:'This spot is outside the Sharjah UTM Zone 40N range — cannot add a point here.' },
   btn_delete_point: { ar:'🗑️ حذف', en:'🗑️ Delete' },
   confirm_delete_point: { ar:'حذف النقطة "%name%"؟', en:'Delete the point "%name%"?' },
+  tab_survey: { ar:'📝 ملاحظات المسح', en:'📝 Survey Notes' },
+  sn_title: { ar:'📝 ملاحظات المسح', en:'📝 Survey Notes' },
+  sn_hint: { ar:'اضغط مطولاً على أي مكان في الخريطة لتسجيل ملاحظة مسح بإحداثياته ورقم الأرض والمنسوب. تُحفظ دائماً في حسابك وتقدر ترجع لها وقت الحاجة.', en:'Long-press anywhere on the map to record a survey note with its coordinates, land number and elevation. Notes are always saved in your account so you can come back to them.' },
+  sn_none: { ar:'لا توجد ملاحظات مسح بعد.', en:'No survey notes yet.' },
+  sn_count: { ar:'عدد الملاحظات:', en:'Notes count:' },
+  sn_dialog_new: { ar:'📝 ملاحظة مسح جديدة', en:'📝 New survey note' },
+  sn_dialog_edit: { ar:'✏️ تعديل ملاحظة المسح', en:'✏️ Edit survey note' },
+  sn_land: { ar:'رقم الأرض', en:'Land number' },
+  sn_land_ph: { ar:'مثال: 12', en:'e.g. 12' },
+  sn_elev: { ar:'المنسوب (م)', en:'Elevation (m)' },
+  sn_elev_ph: { ar:'مثال: 55.07', en:'e.g. 55.07' },
+  sn_note: { ar:'الملاحظات', en:'Notes' },
+  sn_sug_land: { ar:'مقترح من أقرب معاملة (على بعد %d م) — عدّله إذا لزم', en:'Suggested from the nearest transaction (%d m away) — edit if needed' },
+  sn_sug_elev: { ar:'مقترح من أقرب نقطة منسوب (على بعد %d م) — عدّله إذا لزم', en:'Suggested from the nearest elevation point (%d m away) — edit if needed' },
+  sn_err_empty: { ar:'اكتب رقم الأرض أو المنسوب أو ملاحظة على الأقل.', en:'Enter at least a land number, an elevation or a note.' },
+  sn_err_elev: { ar:'المنسوب يجب أن يكون رقماً.', en:'Elevation must be a number.' },
+  sn_confirm_delete: { ar:'حذف ملاحظة المسح هذه؟', en:'Delete this survey note?' },
+  btn_export_survey: { ar:'📊 تصدير ملاحظات المسح إلى Excel', en:'📊 Export survey notes to Excel' },
+  xls_land: { ar:'رقم الأرض', en:'Land No.' },
+  xls_elev: { ar:'المنسوب', en:'Elevation' },
+  sn_xls_sheet: { ar:'ملاحظات المسح', en:'Survey Notes' },
+  sn_xls_file: { ar:'ملاحظات_المسح.xlsx', en:'survey_notes.xlsx' },
   copy_link_prompt: { ar:'انسخ رابط الموقع:', en:'Copy the location link:' },
   xls_name: { ar:'اسم المعاملة', en:'Transaction Name' },
   xls_stage: { ar:'المرحلة', en:'Stage' },
@@ -676,6 +732,7 @@ function setLang(newLang){
   if(typeof renderAll === 'function' && map){ renderAll(false); }
   if(typeof updateUserLabel === 'function' && typeof auth !== 'undefined' && auth){ updateUserLabel(auth.currentUser); }
   if(typeof refreshElevTabLabels === 'function'){ refreshElevTabLabels(); }
+  if(typeof renderSurvey === 'function' && typeof svLayer !== 'undefined' && svLayer){ renderSurvey(); }
 }
 // ====== نهاية نظام اللغة ======
 
@@ -760,6 +817,29 @@ async function cloudLoad(){
   }catch(e){
     return null; // لا إنترنت أو تعذر الوصول — سيُستخدم التخزين المحلي مؤقتاً
   }
+}
+
+async function cloudLoadKey(sub){
+  if(!currentUid || !auth || !auth.currentUser) return null;
+  try{
+    const token = await auth.currentUser.getIdToken();
+    const res = await fetch(FIREBASE_URL + '/users/' + currentUid + '/' + sub + '.json?auth=' + token);
+    if(!res.ok) return null;
+    const data = await res.json();
+    return Array.isArray(data) ? data : null;
+  }catch(e){ return null; }
+}
+
+async function cloudSaveKey(sub, data){
+  if(!currentUid || !auth || !auth.currentUser) return;
+  try{
+    const token = await auth.currentUser.getIdToken();
+    await fetch(FIREBASE_URL + '/users/' + currentUid + '/' + sub + '.json?auth=' + token, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+  }catch(e){ /* يبقى محفوظاً محلياً */ }
 }
 
 async function cloudSave(data){
@@ -868,6 +948,7 @@ if(auth){
     } else {
       currentUid = null;
       updateUserLabel(null);
+      if(typeof svReset === 'function') svReset();
       document.getElementById('authOverlay').style.display = 'flex';
       document.getElementById('appRoot').style.display = 'none';
     }
@@ -925,6 +1006,7 @@ function initMap(){
   linesLayer = L.layerGroup().addTo(map);
   elevLayer = L.layerGroup(); // لا تُضاف للخريطة إلا عند التبديل لتبويب المناسيب
   drawLayer = L.layerGroup();
+  svLayer = L.layerGroup();
   drawTextLayer = L.layerGroup();
   drawRenderer = L.canvas({ padding: 0.5 });
   map.on('click', onMapClickDraw);
@@ -1721,6 +1803,7 @@ document.getElementById('btnResetNorth').addEventListener('click', function(){
 });
 
 document.getElementById('btnZoomExtent').addEventListener('click', function(){
+  if(currentView === 'survey'){ svFitAll(); return; }
   if(currentView === 'drawing'){
     if(drawBounds){ map.fitBounds(drawBounds, { padding: [30, 30] }); } else { showMapWarning(tr('draw_none_loaded')); }
     return;
@@ -1782,7 +1865,7 @@ function findElevArea(key){
   return ELEVATION_AREAS.find(function(a){ return a.key === key; });
 }
 
-async function ensureAreaData(area){
+async function ensureAreaData(area, silent){
   if(area.data) return area.data; // محمّلة مسبقاً أو مضمّنة مباشرة في الكود
   if(!area.file) return null;
   try{
@@ -1791,7 +1874,7 @@ async function ensureAreaData(area){
     area.data = await res.json();
     return area.data;
   }catch(e){
-    showMapWarning(tr('elev_load_failed').replace('%area%', (lang === 'ar' ? area.labelAr : area.labelEn)).replace('%file%', area.file));
+    if(!silent) showMapWarning(tr('elev_load_failed').replace('%area%', (lang === 'ar' ? area.labelAr : area.labelEn)).replace('%file%', area.file));
     return null;
   }
 }
@@ -1895,6 +1978,8 @@ async function switchView(view){
   const viewT = document.getElementById('transactionsView');
   const viewE = document.getElementById('elevationsView');
   const viewD = document.getElementById('drawingView');
+  const viewS = document.getElementById('surveyView');
+  const btnS = document.getElementById('viewTabSurvey');
   const btnNearestEl = document.getElementById('btnNearest');
 
   // إعادة ضبط كل شيء ثم إظهار ما يخص التبويب المطلوب
@@ -1903,10 +1988,14 @@ async function switchView(view){
     if(b) b.classList.remove('active');
   });
   if(btnD) btnD.classList.remove('active');
+  if(btnS) btnS.classList.remove('active');
   btnT.classList.remove('active');
   viewT.style.display = 'none';
   viewE.style.display = 'none';
   if(viewD) viewD.style.display = 'none';
+  if(viewS) viewS.style.display = 'none';
+  if(svLayer) map.removeLayer(svLayer);
+  if(svPickMarker){ map.removeLayer(svPickMarker); svPickMarker = null; }
   map.removeLayer(markersLayer);
   map.removeLayer(linesLayer);
   map.removeLayer(elevLayer);
@@ -1923,6 +2012,13 @@ async function switchView(view){
     markersLayer.addTo(map);
     linesLayer.addTo(map);
     renderAll(false);
+  } else if(view === 'survey'){
+    currentElevKey = null;
+    if(btnS) btnS.classList.add('active');
+    if(viewS) viewS.style.display = 'block';
+    svLayer.addTo(map);
+    ELEVATION_AREAS.forEach(function(a){ ensureAreaData(a, true); }); // تحميل صامت لاقتراح المنسوب
+    svLoad().then(function(){ svFitAll(); });
   } else if(view === 'drawing'){
     currentElevKey = null;
     if(btnD) btnD.classList.add('active');
@@ -2456,6 +2552,7 @@ document.getElementById('drawSavedList').addEventListener('click', async functio
 let lpPoint = null, lpMarker = null, lpLastAt = 0, lpOpenedAt = 0, lpStageLast = '1';
 
 function openLongPressModal(latlng){
+  if(currentView === 'survey'){ openSurveyFromPress(latlng); return; }
   if(currentView !== 'transactions') return;
   const root = document.getElementById('appRoot');
   if(root && root.style.display === 'none') return;
@@ -2541,6 +2638,250 @@ document.getElementById('lpName').addEventListener('keydown', function(e){
 });
 // ====== نهاية الضغط المطوّل ======
 
+// ====== ملاحظات المسح (Survey notes) — محفوظة في حسابك ======
+let surveyNotes = [];
+let svLayer = null, svPickMarker = null;
+let svEditingId = null, svPoint = null, svOpenedAt = 0;
+
+function svLocalKey(){ return 'survey_notes_' + (currentUid || 'guest'); }
+function svReset(){ surveyNotes = []; }
+
+function svNormalize(a){
+  return Array.isArray(a) ? a.filter(function(n){ return n && typeof n === 'object' && n.id; }) : [];
+}
+
+async function svLoad(){
+  try{ surveyNotes = svNormalize(JSON.parse(localStorage.getItem(svLocalKey()) || '[]')); }catch(e){ surveyNotes = []; }
+  renderSurvey();
+  const cloud = await cloudLoadKey('surveyNotes');
+  if(cloud){
+    surveyNotes = svNormalize(cloud);
+    try{ localStorage.setItem(svLocalKey(), JSON.stringify(surveyNotes)); }catch(e){}
+    renderSurvey();
+  }
+}
+
+async function svSave(){
+  try{ localStorage.setItem(svLocalKey(), JSON.stringify(surveyNotes)); }
+  catch(e){ showMapWarning(tr('err_save_failed')); }
+  await cloudSaveKey('surveyNotes', surveyNotes);
+}
+
+function svSuggestLand(E, N){
+  let best = null, bd = 60;
+  transactions.forEach(function(t){
+    const d = Math.hypot(t.easting - E, t.northing - N);
+    if(d < bd){ bd = d; best = t; }
+  });
+  if(!best) return null;
+  const m = (best.name || '').match(/\d+/);
+  return m ? { land: m[0], d: bd } : null;
+}
+
+function svSuggestElev(E, N){
+  let bz = null, bd = 25;
+  ELEVATION_AREAS.forEach(function(a){
+    if(!a.data) return;
+    for(let i = 0; i < a.data.length; i++){
+      const r = a.data[i];
+      const dx = r[1] - E;
+      if(dx > bd || dx < -bd) continue;
+      const d = Math.hypot(dx, r[2] - N);
+      if(d < bd){ bd = d; bz = r[0]; }
+    }
+  });
+  return bz === null ? null : { z: bz, d: bd };
+}
+
+function svSetSug(id, text){
+  const el = document.getElementById(id);
+  el.textContent = text || '';
+  el.style.display = text ? 'block' : 'none';
+}
+
+function openSurveyDialog(point, note){
+  svPoint = point;
+  svEditingId = note ? note.id : null;
+  svOpenedAt = Date.now();
+  document.getElementById('svTitle').textContent = note ? tr('sn_dialog_edit') : tr('sn_dialog_new');
+  document.getElementById('svCoords').textContent = 'E ' + point.E.toFixed(3) + '   N ' + point.N.toFixed(3);
+  const err = document.getElementById('svErr'); err.style.display = 'none'; err.textContent = '';
+  svSetSug('svSugLand', ''); svSetSug('svSugElev', '');
+
+  if(note){
+    document.getElementById('svLand').value = note.land || '';
+    document.getElementById('svElev').value = (note.elev === null || note.elev === undefined) ? '' : note.elev;
+    document.getElementById('svNote').value = note.note || '';
+  } else {
+    document.getElementById('svLand').value = '';
+    document.getElementById('svElev').value = '';
+    document.getElementById('svNote').value = '';
+    const sl = svSuggestLand(point.E, point.N);
+    if(sl){ document.getElementById('svLand').value = sl.land; svSetSug('svSugLand', tr('sn_sug_land').replace('%d', Math.round(sl.d))); }
+    const se = svSuggestElev(point.E, point.N);
+    if(se){ document.getElementById('svElev').value = se.z; svSetSug('svSugElev', tr('sn_sug_elev').replace('%d', Math.round(se.d))); }
+  }
+  if(svPickMarker){ map.removeLayer(svPickMarker); svPickMarker = null; }
+  if(!note){
+    svPickMarker = L.circleMarker([point.lat, point.lng], { radius: 11, color: '#ffffff', weight: 2, fillColor: '#0ea5e9', fillOpacity: 0.5, interactive: false }).addTo(map);
+  }
+  document.getElementById('surveyModal').style.display = 'flex';
+}
+
+function closeSurveyDialog(){
+  document.getElementById('surveyModal').style.display = 'none';
+  if(svPickMarker){ map.removeLayer(svPickMarker); svPickMarker = null; }
+  svPoint = null; svEditingId = null;
+}
+
+function openSurveyFromPress(latlng){
+  const root = document.getElementById('appRoot');
+  if(root && root.style.display === 'none') return;
+  const now = Date.now();
+  if(now - lpLastAt < 1500) return;
+  let en;
+  try{ en = proj4('EPSG:4326', 'EPSG:32640', [latlng.lng, latlng.lat]); }catch(e){ return; }
+  const E = Math.round(en[0] * 1000) / 1000, N = Math.round(en[1] * 1000) / 1000;
+  lpLastAt = now;
+  if(!inUtmRange(E, N)){ showMapWarning(tr('lp_out_of_range')); return; }
+  openSurveyDialog({ E: E, N: N, lat: latlng.lat, lng: latlng.lng }, null);
+}
+
+async function saveSurveyNote(){
+  if(!svPoint) return;
+  if(Date.now() - svOpenedAt < 600) return; // تجاهل نقرة شبحية بعد رفع الإصبع
+  const land = document.getElementById('svLand').value.trim();
+  const elevRaw = document.getElementById('svElev').value.trim();
+  const text = document.getElementById('svNote').value.trim();
+  const err = document.getElementById('svErr');
+  let elev = null;
+  if(elevRaw !== ''){
+    elev = parseFloat(elevRaw.replace(',', '.'));
+    if(isNaN(elev)){ err.textContent = tr('sn_err_elev'); err.style.display = 'block'; return; }
+  }
+  if(!land && elev === null && !text){ err.textContent = tr('sn_err_empty'); err.style.display = 'block'; return; }
+
+  if(svEditingId){
+    const n = surveyNotes.find(function(x){ return x.id === svEditingId; });
+    if(n){ n.land = land; n.elev = elev; n.note = text; n.updatedAt = Date.now(); }
+  } else {
+    surveyNotes.push({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      E: svPoint.E, N: svPoint.N, lat: svPoint.lat, lng: svPoint.lng,
+      land: land, elev: elev, note: text, createdAt: todayStr(), ts: Date.now()
+    });
+  }
+  closeSurveyDialog();
+  await svSave();
+  renderSurvey();
+}
+
+async function deleteSurveyNote(id){
+  if(!confirm(tr('sn_confirm_delete'))) return;
+  surveyNotes = surveyNotes.filter(function(x){ return x.id !== id; });
+  closeSurveyDialog();
+  await svSave();
+  renderSurvey();
+}
+
+function svPointOf(n){ return { E: n.E, N: n.N, lat: n.lat, lng: n.lng }; }
+
+function renderSurvey(){
+  const list = document.getElementById('svList');
+  const cnt = document.getElementById('svCount');
+  if(cnt) cnt.textContent = surveyNotes.length;
+  if(svLayer){
+    svLayer.clearLayers();
+    surveyNotes.forEach(function(n){
+      if(typeof n.lat !== 'number' || typeof n.lng !== 'number') return;
+      const label = n.land ? escapeHtml(String(n.land)) : '📝';
+      const m = L.marker([n.lat, n.lng], { icon: L.divIcon({ className: '', html: '<div class="sv-marker">' + label + '</div>', iconSize: null }), keyboard: false });
+      m.on('click', function(){ openSurveyDialog(svPointOf(n), n); });
+      m.addTo(svLayer);
+    });
+  }
+  if(!list) return;
+  if(!surveyNotes.length){
+    list.innerHTML = '<div style="color:var(--muted); font-size:13px; text-align:center; padding:14px 0;">' + escapeHtml(tr('sn_none')) + '</div>';
+    return;
+  }
+  const sorted = surveyNotes.slice().sort(function(a, b){ return (b.ts || 0) - (a.ts || 0); });
+  list.innerHTML = sorted.map(function(n){
+    const elevTxt = (n.elev === null || n.elev === undefined) ? '' : '<div class="coords">📐 ' + n.elev + ' ' + tr('unit_m') + '</div>';
+    const noteTxt = n.note ? '<div style="font-size:12.5px; margin-top:4px; line-height:1.6;">📝 ' + escapeHtml(n.note.length > 140 ? n.note.slice(0, 140) + '…' : n.note) + '</div>' : '';
+    return '<div class="item"><div class="info">' +
+      '<div class="name"><span class="stage-badge" style="background:#0ea5e9; width:auto; padding:0 8px;">' + (n.land ? escapeHtml(String(n.land)) : '—') + '</span>' + escapeHtml(tr('sn_land')) + '</div>' +
+      '<div class="coords">E: ' + Number(n.E).toFixed(3) + '&nbsp;&nbsp;N: ' + Number(n.N).toFixed(3) + '</div>' +
+      elevTxt + noteTxt +
+      '<div class="coords">📅 ' + escapeHtml(n.createdAt || '') + '</div></div>' +
+      '<div class="actions">' +
+      '<button class="btn-small" style="background:var(--accent); color:var(--accent-ink);" data-sv-act="locate" data-sv-id="' + n.id + '">🎯</button>' +
+      '<button class="btn-small" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border);" data-sv-act="edit" data-sv-id="' + n.id + '">✏️</button>' +
+      '<button class="btn-small btn-del" data-sv-act="del" data-sv-id="' + n.id + '">🗑️</button>' +
+      '</div></div>';
+  }).join('');
+}
+
+function svFitAll(){
+  const pts = surveyNotes.filter(function(n){ return typeof n.lat === 'number'; }).map(function(n){ return [n.lat, n.lng]; });
+  if(pts.length) map.fitBounds(pts, { padding: [40, 40], maxZoom: 19 });
+}
+
+document.getElementById('svList').addEventListener('click', function(e){
+  const b = e.target.closest('[data-sv-act]');
+  if(!b) return;
+  const id = b.getAttribute('data-sv-id');
+  const n = surveyNotes.find(function(x){ return x.id === id; });
+  if(!n) return;
+  const act = b.getAttribute('data-sv-act');
+  if(act === 'locate'){
+    const wrap = document.getElementById('mapWrap');
+    if(wrap) wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    map.setView([n.lat, n.lng], 20);
+  } else if(act === 'edit'){
+    openSurveyDialog(svPointOf(n), n);
+  } else if(act === 'del'){
+    deleteSurveyNote(id);
+  }
+});
+document.getElementById('btnSvSave').addEventListener('click', saveSurveyNote);
+document.getElementById('btnSvCancel').addEventListener('click', function(){
+  if(Date.now() - svOpenedAt < 600) return;
+  closeSurveyDialog();
+});
+document.getElementById('btnSvDelete').addEventListener('click', function(){
+  if(svEditingId) deleteSurveyNote(svEditingId);
+});
+document.getElementById('btnSvExport').addEventListener('click', function(){
+  if(!surveyNotes.length){ showMapWarning(tr('sn_none')); return; }
+  const rows = surveyNotes.slice().sort(function(a, b){ return (a.ts || 0) - (b.ts || 0); }).map(function(n){
+    const r = {};
+    r[tr('xls_land')] = n.land || '';
+    r[tr('xls_elev')] = (n.elev === null || n.elev === undefined) ? '' : n.elev;
+    r[tr('xls_easting')] = n.E;
+    r[tr('xls_northing')] = n.N;
+    r[tr('xls_notes')] = n.note || '';
+    r[tr('xls_date')] = n.createdAt || '';
+    return r;
+  });
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, tr('sn_xls_sheet'));
+  XLSX.writeFile(wb, tr('sn_xls_file'));
+});
+
+function renderSurveyTab(){
+  const wrap = document.getElementById('viewTabs');
+  const btn = document.createElement('button');
+  btn.className = 'tab-btn';
+  btn.id = 'viewTabSurvey';
+  btn.setAttribute('data-i18n', 'tab_survey');
+  btn.textContent = tr('tab_survey');
+  btn.addEventListener('click', function(){ switchView('survey'); });
+  wrap.appendChild(btn);
+}
+// ====== نهاية ملاحظات المسح ======
+
 function renderDrawingTab(){
   const wrap = document.getElementById('viewTabs');
   const btn = document.createElement('button');
@@ -2555,6 +2896,7 @@ function renderDrawingTab(){
 
 renderElevTabs();
 renderDrawingTab();
+renderSurveyTab();
 
 document.getElementById('btnLang').addEventListener('click', function(){
   setLang(lang === 'ar' ? 'en' : 'ar');
