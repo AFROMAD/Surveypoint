@@ -189,7 +189,9 @@
   .draw-text{ color:#fff; font:700 11px 'JetBrains Mono', monospace; text-shadow:0 0 3px #000, 0 0 3px #000, 0 0 2px #000; white-space:nowrap; pointer-events:none; }
   .pick-grid{ display:grid; grid-template-columns:auto 1fr; gap:8px 14px; font-size:14px; align-items:center; }
   .pick-grid span{ color:var(--muted); font-size:12.5px; }
-  .sv-marker{ display:inline-block; transform:translate(-50%,-50%); background:#0ea5e9; color:#fff; border:2px solid #fff; border-radius:12px; padding:2px 8px; font:700 12px 'JetBrains Mono', monospace; box-shadow:0 1px 5px rgba(0,0,0,.55); white-space:nowrap; }
+  .sv-marker{ display:inline-block; transform:translate(-50%,-50%); background:#0ea5e9; color:#fff; border:2px solid #fff; border-radius:12px; padding:2px 8px; text-align:center; line-height:1.15; font:700 12px 'JetBrains Mono', monospace; box-shadow:0 1px 5px rgba(0,0,0,.55); white-space:nowrap; }
+  .sv-elev{ display:block; font-size:14px; }
+  .sv-land{ display:block; font-size:10px; font-weight:600; opacity:.92; }
 </style>
 </head>
 <body>
@@ -401,7 +403,7 @@
 <div class="panel" id="surveyView" style="display:none;">
   <div class="card">
     <h3 data-i18n="sn_title">📝 ملاحظات المسح</h3>
-    <p style="font-size:13px; color:var(--muted); line-height:1.8; margin:0 0 10px;" data-i18n="sn_hint">اضغط مطولاً على أي مكان في الخريطة لتسجيل ملاحظة مسح بإحداثياته ورقم الأرض والمنسوب. تُحفظ دائماً في حسابك وتقدر ترجع لها وقت الحاجة.</p>
+    <p style="font-size:13px; color:var(--muted); line-height:1.8; margin:0 0 10px;" data-i18n="sn_hint">اضغط مطولاً على أي مكان في الخريطة لتسجيل ملاحظة مسح بإحداثياته ورقم الأرض والمنسوب. تُحفظ دائماً في حسابك وتقدر ترجع لها وقت الحاجة. على الخريطة: السطر العلوي في العلامة هو المنسوب والسفلي رقم الأرض.</p>
     <div style="font-size:13px; color:var(--muted);"><span data-i18n="sn_count">عدد الملاحظات:</span> <b id="svCount" class="mono" style="color:var(--text);">0</b></div>
     <button class="btn-small" id="btnSvExport" data-i18n="btn_export_survey" style="background:var(--surface-2); color:var(--text); border:1px solid var(--border); width:100%; margin-top:10px;">📊 تصدير ملاحظات المسح إلى Excel</button>
   </div>
@@ -638,7 +640,7 @@ const TRANSLATIONS = {
   confirm_delete_point: { ar:'حذف النقطة "%name%"؟', en:'Delete the point "%name%"?' },
   tab_survey: { ar:'📝 ملاحظات المسح', en:'📝 Survey Notes' },
   sn_title: { ar:'📝 ملاحظات المسح', en:'📝 Survey Notes' },
-  sn_hint: { ar:'اضغط مطولاً على أي مكان في الخريطة لتسجيل ملاحظة مسح بإحداثياته ورقم الأرض والمنسوب. تُحفظ دائماً في حسابك وتقدر ترجع لها وقت الحاجة.', en:'Long-press anywhere on the map to record a survey note with its coordinates, land number and elevation. Notes are always saved in your account so you can come back to them.' },
+  sn_hint: { ar:'اضغط مطولاً على أي مكان في الخريطة لتسجيل ملاحظة مسح بإحداثياته ورقم الأرض والمنسوب. تُحفظ دائماً في حسابك وتقدر ترجع لها وقت الحاجة. على الخريطة: السطر العلوي في العلامة هو المنسوب والسفلي رقم الأرض.', en:'Long-press anywhere on the map to record a survey note with its coordinates, land number and elevation. Notes are always saved in your account. On the map, the top line of each marker is the elevation and the bottom line is the land number.' },
   sn_none: { ar:'لا توجد ملاحظات مسح بعد.', en:'No survey notes yet.' },
   sn_count: { ar:'عدد الملاحظات:', en:'Notes count:' },
   sn_dialog_new: { ar:'📝 ملاحظة مسح جديدة', en:'📝 New survey note' },
@@ -2794,8 +2796,16 @@ function renderSurvey(){
     svLayer.clearLayers();
     surveyNotes.forEach(function(n){
       if(typeof n.lat !== 'number' || typeof n.lng !== 'number') return;
-      const label = n.land ? escapeHtml(String(n.land)) : '📝';
-      const m = L.marker([n.lat, n.lng], { icon: L.divIcon({ className: '', html: '<div class="sv-marker">' + label + '</div>', iconSize: null }), keyboard: false });
+      // السطر العلوي = المنسوب (الأهم)، والسفلي = رقم الأرض
+      const hasElev = n.elev !== null && n.elev !== undefined && n.elev !== '' && !isNaN(Number(n.elev));
+      const landTxt = n.land ? escapeHtml(String(n.land)) : '';
+      let inner;
+      if(hasElev){
+        inner = '<span class="sv-elev">' + parseFloat(Number(n.elev).toFixed(3)) + '</span>' + (landTxt ? '<span class="sv-land">' + landTxt + '</span>' : '');
+      } else {
+        inner = landTxt || '📝';
+      }
+      const m = L.marker([n.lat, n.lng], { icon: L.divIcon({ className: '', html: '<div class="sv-marker">' + inner + '</div>', iconSize: null }), keyboard: false });
       m.on('click', function(){ openSurveyDialog(svPointOf(n), n); });
       m.addTo(svLayer);
     });
